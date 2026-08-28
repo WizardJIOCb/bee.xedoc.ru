@@ -27,6 +27,22 @@ test('Метрика подключена через CSP-совместимый 
     assert.match(csp, /script-src[^;]*https:\/\/mc\.yandex\.ru/);
     assert.match(csp, /connect-src[^;]*wss:\/\/mc\.yandex\.ru/);
     assert.match(csp, /frame-src[^;]*blob:/);
+    assert.doesNotMatch(csp, /style-src[^;]*'unsafe-inline'/);
+    assert.equal(page.headers.get('x-frame-options'), 'SAMEORIGIN');
+    assert.equal(page.headers.get('cross-origin-opener-policy'), 'same-origin');
+
+    const statusCheck = await fetch(`${base}/?_ym_status-check=112046844&_ym_lang=ru`);
+    const statusCsp = statusCheck.headers.get('content-security-policy') || '';
+    assert.match(statusCsp, /style-src[^;]*'unsafe-inline'/);
+    assert.equal(statusCheck.headers.get('x-frame-options'), null);
+    assert.equal(statusCheck.headers.get('cross-origin-opener-policy'), null);
+
+    const debuggerPage = await fetch(`${base}/?_ym_debug=2`);
+    assert.match(debuggerPage.headers.get('content-security-policy') || '', /style-src[^;]*'unsafe-inline'/);
+
+    const forgedStatusCheck = await fetch(`${base}/?_ym_status-check=999999`);
+    assert.doesNotMatch(forgedStatusCheck.headers.get('content-security-policy') || '', /style-src[^;]*'unsafe-inline'/);
+    assert.equal(forgedStatusCheck.headers.get('x-frame-options'), 'SAMEORIGIN');
 
     const script = await fetch(`${base}/assets/app.js`).then((response) => response.text());
     assert.match(script, /METRIKA_COUNTER_ID = 112046844/);

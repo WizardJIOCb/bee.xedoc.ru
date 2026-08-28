@@ -86,6 +86,28 @@ const metrikaServerGoals = new Set([
   'supplier_profile_published',
   'lot_created',
 ]);
+const metrikaCounterId = '112046844';
+
+function metrikaSecurityHeaders(diagnostic = false) {
+  return helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", 'data:', ...metrikaHttpSources],
+        styleSrc: diagnostic ? ["'self'", "'unsafe-inline'"] : ["'self'"],
+        scriptSrc: ["'self'", ...metrikaHttpSources],
+        fontSrc: ["'self'"],
+        connectSrc: ["'self'", ...metrikaHttpSources, ...metrikaSocketSources],
+        childSrc: ["'self'", 'blob:', ...metrikaHttpSources],
+        frameSrc: ["'self'", 'blob:', ...metrikaHttpSources],
+        frameAncestors: ["'self'", ...metrikaFrameAncestors],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: diagnostic ? false : undefined,
+    xFrameOptions: diagnostic ? false : undefined,
+  });
+}
 
 function withMetrikaGoal(destination: string, goal: string, role = '') {
   const url = new URL(destination, 'http://pchela.local');
@@ -113,22 +135,13 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   app.locals.coverChoices = coverChoices;
   app.locals.year = new Date().getFullYear();
 
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:', ...metrikaHttpSources],
-        styleSrc: ["'self'"],
-        scriptSrc: ["'self'", ...metrikaHttpSources],
-        fontSrc: ["'self'"],
-        connectSrc: ["'self'", ...metrikaHttpSources, ...metrikaSocketSources],
-        childSrc: ["'self'", 'blob:', ...metrikaHttpSources],
-        frameSrc: ["'self'", 'blob:', ...metrikaHttpSources],
-        frameAncestors: ["'self'", ...metrikaFrameAncestors],
-      },
-    },
-    crossOriginEmbedderPolicy: false,
-  }));
+  const regularSecurityHeaders = metrikaSecurityHeaders();
+  const diagnosticSecurityHeaders = metrikaSecurityHeaders(true);
+  app.use((request, response, next) => {
+    const isMetrikaStatusCheck = asText(request.query['_ym_status-check'], 30) === metrikaCounterId;
+    const isMetrikaDebugger = asText(request.query['_ym_debug'], 10) === '2';
+    return (isMetrikaStatusCheck || isMetrikaDebugger ? diagnosticSecurityHeaders : regularSecurityHeaders)(request, response, next);
+  });
   app.use(express.urlencoded({ extended: false, limit: '512kb' }));
   app.use(express.json({ limit: '512kb' }));
   app.use('/assets', express.static(resolve(projectRoot, 'public'), {
