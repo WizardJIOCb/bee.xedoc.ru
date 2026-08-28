@@ -148,6 +148,9 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     maxAge: production ? '7d' : 0,
     etag: true,
   }));
+  app.get('/favicon.ico', (_request, response) => response.sendFile(resolve(projectRoot, 'public', 'favicon.ico'), {
+    maxAge: production ? '7d' : 0,
+  }));
   app.use('/media', express.static(mediaRoot, {
     maxAge: production ? '7d' : 0,
     etag: true,
