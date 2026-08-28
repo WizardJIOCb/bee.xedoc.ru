@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express, { type NextFunction, type Request, type Response } from 'express';
@@ -47,6 +46,8 @@ declare global {
       activePath: string;
       notice: string;
       noticeType: string;
+      metrikaGoal: string;
+      metrikaGoalRole: string;
     }
   }
 }
@@ -58,6 +59,41 @@ const databasePath = process.env.DATABASE_PATH || resolve(projectRoot, 'data', '
 const mediaRoot = process.env.MEDIA_ROOT || resolve(dirname(databasePath), 'uploads');
 const secureCookies = production;
 const configuredAdminEmail = () => String(process.env.ADMIN_EMAIL || '').trim().toLocaleLowerCase('ru');
+const metrikaHttpSources = [
+  'https://mc.yandex.ru',
+  'https://mc.yandex.com',
+  'https://mc.webvisor.com',
+  'https://mc.webvisor.org',
+  'https://yastatic.net',
+];
+const metrikaSocketSources = [
+  'wss://mc.yandex.ru',
+  'wss://mc.yandex.com',
+  'wss://mc.webvisor.com',
+  'wss://mc.webvisor.org',
+];
+const metrikaFrameAncestors = [
+  'https://metrika.yandex.ru',
+  'https://analytics.yandex.ru',
+  'https://metr.yandex.ru',
+  'https://metrica.yandex.ru',
+];
+const metrikaServerGoals = new Set([
+  'registration_success',
+  'login_success',
+  'inquiry_success',
+  'favorite_added',
+  'supplier_profile_published',
+  'lot_created',
+]);
+
+function withMetrikaGoal(destination: string, goal: string, role = '') {
+  const url = new URL(destination, 'http://pchela.local');
+  url.searchParams.set('ym_goal', goal);
+  if (role) url.searchParams.set('ym_role', role);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 const coverChoices = [
   { value: '', label: 'Фирменная иллюстрация без фотографии' },
   { value: '/assets/apiaries/belaya-reka.webp', label: 'Горная пасека «Белая река»' },
@@ -81,11 +117,14 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", 'data:'],
+        imgSrc: ["'self'", 'data:', ...metrikaHttpSources],
         styleSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", ...metrikaHttpSources],
         fontSrc: ["'self'"],
-        connectSrc: ["'self'"],
+        connectSrc: ["'self'", ...metrikaHttpSources, ...metrikaSocketSources],
+        childSrc: ["'self'", 'blob:', ...metrikaHttpSources],
+        frameSrc: ["'self'", 'blob:', ...metrikaHttpSources],
+        frameAncestors: ["'self'", ...metrikaFrameAncestors],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -106,6 +145,11 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     response.locals.activePath = request.path;
     response.locals.notice = asText(request.query.notice, 180);
     response.locals.noticeType = asText(request.query.type, 20) === 'error' ? 'error' : 'success';
+    const requestedMetrikaGoal = asText(request.query.ym_goal, 80);
+    response.locals.metrikaGoal = metrikaServerGoals.has(requestedMetrikaGoal) ? requestedMetrikaGoal : '';
+    response.locals.metrikaGoalRole = ['supplier', 'buyer', 'admin'].includes(asText(request.query.ym_role, 20))
+      ? asText(request.query.ym_role, 20)
+      : '';
     response.locals.cities = cities;
 
     const cookieHeader = request.headers.cookie || '';
@@ -360,7 +404,18 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       db.exec('COMMIT');
       createSession(db, response, userId, secureCookies);
       const destination = adminEmail && email === adminEmail ? '/admin' : nextUrl;
-      return response.redirect(`${destination}?notice=${encodeURIComponent(adminEmail && email === adminEmail ? 'Администратор создан. Добро пожаловать в панель управления.' : role === 'supplier' ? 'Аккаунт создан. Заполните карточку пасеки и добавьте первую партию.' : 'Аккаунт закупщика создан. Теперь можно отправлять заявки.')}`);
+      const notice = adminEmail && email === adminEmail
+        ? 'Администратор создан. Добро пожаловать в панель управления.'
+        : role === 'supplier'
+          ? 'Аккаунт создан. Заполните карточку пасеки и добавьте первую партию.'
+          : 'Аккаунт закупщика создан. Теперь можно отправлять заявки.';
+      const destinationWithNotice = new URL(destination, 'http://pchela.local');
+      destinationWithNotice.searchParams.set('notice', notice);
+      return response.redirect(withMetrikaGoal(
+        `${destinationWithNotice.pathname}${destinationWithNotice.search}${destinationWithNotice.hash}`,
+        'registration_success',
+        adminEmail && email === adminEmail ? 'admin' : role,
+      ));
     } catch (errorValue) {
       try { db.exec('ROLLBACK'); } catch { /* transaction was not started */ }
       const duplicate = String(errorValue).includes('UNIQUE');
@@ -386,8 +441,9 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     }
     db.prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
     createSession(db, response, user.id, secureCookies);
-    const isAdmin = Boolean((db.prepare('SELECT is_admin FROM users WHERE id = ?').get(user.id) as { is_admin: number }).is_admin);
-    return response.redirect(isAdmin && nextUrl === '/dashboard' ? '/admin' : nextUrl);
+    const userMeta = db.prepare('SELECT is_admin, role FROM users WHERE id = ?').get(user.id) as { is_admin: number; role: string };
+    const destination = userMeta.is_admin && nextUrl === '/dashboard' ? '/admin' : nextUrl;
+    return response.redirect(withMetrikaGoal(destination, 'login_success', userMeta.is_admin ? 'admin' : userMeta.role));
   });
 
   app.post('/logout', requireAuth, (request, response) => {
@@ -460,6 +516,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   app.post('/dashboard/profile', requireRole('supplier'), (_request, response) => {
     const request = _request as Request;
     const user = response.locals.currentUser!;
+    const previousProfile = db.prepare('SELECT published FROM apiaries WHERE user_id = ?').get(user.id) as { published: number };
     const cityCode = cityMap.has(asText(request.body.city_code, 40)) ? asText(request.body.city_code, 40) : '';
     const name = asText(request.body.name, 140);
     const requestedCover = asText(request.body.cover_image, 220);
@@ -478,7 +535,10 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       asText(request.body.certifications, 500), request.body.lab_verified === '1' ? 1 : 0,
       request.body.frame_available === '1' ? 1 : 0, request.body.published === '1' ? 1 : 0, coverImage, user.id,
     );
-    return response.redirect(`/dashboard?notice=${encodeURIComponent('Карточка пасеки сохранена')}`);
+    const destination = `/dashboard?notice=${encodeURIComponent('Карточка пасеки сохранена')}`;
+    return response.redirect(!previousProfile.published && request.body.published === '1'
+      ? withMetrikaGoal(destination, 'supplier_profile_published', 'supplier')
+      : destination);
   });
 
   app.post('/dashboard/lots', requireRole('supplier'), (request, response) => {
@@ -496,7 +556,11 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       asInt(request.body.min_order_kg, 1, stock, 1), price,
       asText(request.body.packaging, 180), asText(request.body.quality_note, 500),
     );
-    return response.redirect(`/dashboard?notice=${encodeURIComponent('Партия добавлена в каталог')}`);
+    return response.redirect(withMetrikaGoal(
+      `/dashboard?notice=${encodeURIComponent('Партия добавлена в каталог')}`,
+      'lot_created',
+      'supplier',
+    ));
   });
 
   app.post('/dashboard/lots/:id/toggle', requireRole('supplier'), (request, response) => {
@@ -520,7 +584,8 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     if (existing) db.prepare('DELETE FROM favorites WHERE user_id = ? AND apiary_id = ?').run(response.locals.currentUser!.id, apiaryId);
     else db.prepare('INSERT OR IGNORE INTO favorites (user_id, apiary_id) VALUES (?, ?)').run(response.locals.currentUser!.id, apiaryId);
     const apiary = db.prepare('SELECT slug FROM apiaries WHERE id = ?').get(apiaryId) as { slug: string } | undefined;
-    return response.redirect(apiary ? `/suppliers/${apiary.slug}` : '/catalog');
+    const destination = apiary ? `/suppliers/${apiary.slug}` : '/catalog';
+    return response.redirect(existing ? destination : withMetrikaGoal(destination, 'favorite_added', 'buyer'));
   });
 
   app.post('/inquiries', inquiryLimiter, requireRole('buyer'), (request, response) => {
@@ -537,7 +602,11 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       INSERT INTO inquiries (buyer_user_id, apiary_id, lot_id, volume_kg, delivery_city, message)
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(response.locals.currentUser!.id, apiaryId, lotId || null, volume, deliveryCity, asText(request.body.message, 1200));
-    return response.redirect(`/dashboard?notice=${encodeURIComponent('Заявка отправлена. Поставщик увидит её в кабинете.')}`);
+    return response.redirect(withMetrikaGoal(
+      `/dashboard?notice=${encodeURIComponent('Заявка отправлена. Поставщик увидит её в кабинете.')}`,
+      'inquiry_success',
+      'buyer',
+    ));
   });
 
   app.post('/inquiries/:id/status', requireRole('supplier'), (request, response) => {
@@ -754,7 +823,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   return app;
 }
 
-if (existsSync(fileURLToPath(import.meta.url)) && process.env.NODE_ENV !== 'test') {
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.env.NODE_ENV !== 'test') {
   const port = asInt(process.env.PORT, 1, 65535, 3031);
   const host = process.env.HOST || '127.0.0.1';
   const app = createApp();

@@ -1261,3 +1261,5 @@ img, svg { display: block; }
   .publication-manager-actions { grid-template-columns: 1fr; }
   .publication-dashboard-cta > div:last-child, .publication-dashboard-cta .button { width: 100%; }
 }
+/* Yandex Metrica fallback for visitors with JavaScript disabled. */
+.metrika-noscript { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }

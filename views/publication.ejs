@@ -2,7 +2,7 @@
 <%- include('partials/header') %>
 <main>
   <% if (isPreview) { %><div class="preview-banner">Предпросмотр · статус «<%= ({draft:'черновик',pending:'на модерации',rejected:'нужны изменения'})[publication.status] %>»</div><% } %>
-  <article class="publication-article">
+  <article class="publication-article" data-publication-id="<%= publication.id %>" data-publication-kind="<%= publication.kind %>">
     <header class="publication-article-header container">
       <a class="publication-back" href="<%= publication.kind === 'news' ? '/news' : publication.kind === 'event' ? '/events' : '/articles' %>">← <%= ({news:'Все новости',event:'Все события',article:'Все статьи'})[publication.kind] %></a>
       <div class="publication-kind-row"><span class="publication-kind"><%= ({news:'Новость',event:'Событие',article:'Статья участника'})[publication.kind] %></span><% if (publication.kind !== 'event') { %><time><%= new Date((publication.published_at || publication.created_at) + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) %></time><% } %></div>

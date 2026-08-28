@@ -7,7 +7,12 @@
   <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'pchela.shop — прямые поставки мёда от пасек в магазины. Поиск по расстоянию, цене, объёму и качеству.' %>">
   <title><%= title %><%= String(title).includes('pchela.shop') ? '' : ' — pchela.shop' %></title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/styles.css?v=20260828.12">
-  <script src="/assets/app.js?v=20260828.12" defer></script>
+  <link rel="stylesheet" href="/assets/styles.css?v=20260828.14">
+  <script src="/assets/app.js?v=20260828.14" defer></script>
 </head>
-<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+<body
+  class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>"
+  data-metrika-goal="<%= metrikaGoal %>"
+  data-metrika-role="<%= metrikaGoalRole %>"
+>
+<noscript><div class="metrika-noscript" aria-hidden="true"><img src="https://mc.yandex.ru/watch/112046844" width="1" height="1" alt=""></div></noscript>

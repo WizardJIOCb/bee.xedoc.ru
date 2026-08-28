@@ -9,7 +9,13 @@
       <% if (apiary.is_demo) { %><span class="demo-label">демонстрационный пример</span><% } %>
     </div>
   </section>
-  <section class="supplier-main container">
+  <section
+    class="supplier-main container"
+    data-apiary-id="<%= apiary.id %>"
+    data-apiary-demo="<%= apiary.is_demo ? '1' : '0' %>"
+    data-apiary-verified="<%= apiary.verified ? '1' : '0' %>"
+    data-apiary-lots="<%= lots.length %>"
+  >
     <div class="supplier-content">
       <div class="supplier-heading">
         <div class="supplier-logo"><%= String(apiary.name).slice(0, 2).toUpperCase() %></div>

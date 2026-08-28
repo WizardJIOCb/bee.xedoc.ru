@@ -1,4 +1,4 @@
-<article class="apiary-card accent-<%= item.accent %>">
+<article class="apiary-card accent-<%= item.accent %>" data-apiary-id="<%= item.id %>">
   <a class="apiary-card-cover" href="/suppliers/<%= item.slug %>" aria-label="Открыть карточку <%= item.name %>">
     <% if (item.cover_image) { %><img class="apiary-cover-photo" src="<%= item.cover_image %>" alt="Пасека <%= item.name %>" loading="lazy"><span class="photo-shade"></span><% } %>
     <span class="cover-sun"></span>
