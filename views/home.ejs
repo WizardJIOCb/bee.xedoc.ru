@@ -33,42 +33,42 @@
       </div>
     </div>
     <div class="container hero-search-wrap">
-      <form class="hero-search" action="/catalog" method="get">
-        <div class="search-field">
-          <label for="from">Откуда ищем</label>
-          <select id="from" name="from">
-            <% cities.forEach((city) => { %><option value="<%= city.code %>" <%= city.code === 'ufa' ? 'selected' : '' %>><%= city.name %></option><% }) %>
-          </select>
-        </div>
-        <div class="search-divider"></div>
-        <div class="search-field">
-          <label for="radius">Удалённость</label>
-          <select id="radius" name="radius">
-            <option value="150">до 150 км</option>
-            <option value="300" selected>до 300 км</option>
-            <option value="600">до 600 км</option>
-            <option value="">не важно</option>
-          </select>
-        </div>
-        <div class="search-divider"></div>
-        <div class="search-field search-wide">
-          <label for="q">Что нужно</label>
-          <input id="q" name="q" placeholder="Например, липовый или рамка">
-        </div>
-        <button class="search-submit" type="submit" aria-label="Найти пасеки">
-          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <span>Найти</span>
-        </button>
-      </form>
-    </div>
-  </section>
-
-  <section class="section proof-strip">
-    <div class="container proof-grid">
-      <div><strong><%= stats.apiaries %></strong><span>пасеки в первом наборе</span></div>
-      <div><strong><%= number(stats.stock) %> кг</strong><span>доступно в демо-каталоге</span></div>
-      <div><strong>1→1</strong><span>прямой контакт с хозяйством</span></div>
-      <div><strong>до партии</strong><span>документы и условия закупки</span></div>
+      <div class="hero-command-panel">
+        <form class="hero-search" action="/catalog" method="get">
+          <div class="search-field">
+            <label for="from">Откуда ищем</label>
+            <select id="from" name="from">
+              <% cities.forEach((city) => { %><option value="<%= city.code %>" <%= city.code === 'ufa' ? 'selected' : '' %>><%= city.name %></option><% }) %>
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field">
+            <label for="radius">Удалённость</label>
+            <select id="radius" name="radius">
+              <option value="150">до 150 км</option>
+              <option value="300" selected>до 300 км</option>
+              <option value="600">до 600 км</option>
+              <option value="">не важно</option>
+            </select>
+          </div>
+          <div class="search-divider"></div>
+          <div class="search-field search-wide">
+            <label for="q">Что нужно</label>
+            <input id="q" name="q" placeholder="Например, липовый или рамка">
+          </div>
+          <button class="search-submit" type="submit" aria-label="Найти пасеки">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <span>Найти</span>
+          </button>
+        </form>
+        <section class="proof-grid" aria-labelledby="proof-title">
+          <h2 class="sr-only" id="proof-title">Что уже доступно на платформе</h2>
+          <div><i>01</i><strong><%= stats.apiaries %> пасеки</strong><span>уже можно сравнить в каталоге</span></div>
+          <div><i>02</i><strong><%= number(stats.stock) %> кг</strong><span>доступно в партиях сейчас</span></div>
+          <div><i>03</i><strong>Прямой контакт</strong><span>без цепочки посредников</span></div>
+          <div><i>04</i><strong>Условия до заявки</strong><span>цена, документы и доставка</span></div>
+        </section>
+      </div>
     </div>
   </section>
 

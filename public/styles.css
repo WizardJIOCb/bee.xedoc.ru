@@ -27,6 +27,7 @@ button, select { cursor: pointer; }
 img, svg { display: block; }
 .container { width: min(calc(100% - 40px), var(--container)); margin-inline: auto; }
 .section { padding: 105px 0; }
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
 
 .site-header { position: relative; z-index: 30; background: rgba(255, 253, 246, .92); border-bottom: 1px solid var(--line); backdrop-filter: blur(14px); }
 .home-page .site-header { position: absolute; inset: 0 0 auto; background: transparent; border-bottom-color: rgba(23,37,30,.1); }
@@ -110,8 +111,9 @@ img, svg { display: block; }
 .flower-one { right: 2%; bottom: 26px; font-size: 76px; transform: rotate(13deg); }
 .flower-two { left: 8%; top: 70px; font-size: 44px; }
 .bee { position: absolute; right: 8%; top: 45%; font-size: 18px; transform: rotate(18deg); }
-.hero-search-wrap { position: relative; z-index: 5; transform: translateY(36px); }
-.hero-search { min-height: 112px; display: grid; grid-template-columns: 1fr 1px 1fr 1px 1.35fr auto; align-items: center; gap: 0; padding: 14px; border: 1px solid rgba(23,37,30,.12); border-radius: 22px; background: #fffdf7; box-shadow: 0 28px 70px rgba(72,50,9,.17); }
+.hero-search-wrap { position: relative; z-index: 5; margin-bottom: 42px; transform: translateY(42px); }
+.hero-command-panel { overflow: hidden; border: 1px solid rgba(23,37,30,.13); border-radius: 24px; background: #fffdf7; box-shadow: 0 28px 70px rgba(72,50,9,.2); }
+.hero-search { min-height: 112px; display: grid; grid-template-columns: 1fr 1px 1fr 1px 1.35fr auto; align-items: center; gap: 0; padding: 14px; background: #fffdf7; }
 .search-field { padding: 0 24px; }
 .search-field label, .field > span { display: block; margin-bottom: 9px; color: #6d766e; font-size: 11px; font-weight: 850; text-transform: uppercase; letter-spacing: 1.1px; }
 .search-field select, .search-field input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-weight: 750; }
@@ -120,13 +122,14 @@ img, svg { display: block; }
 .search-submit { align-self: stretch; min-width: 115px; border: 0; border-radius: 16px; display: flex; align-items: center; justify-content: center; gap: 9px; background: var(--ink); color: white; font-weight: 800; }
 .search-submit svg { width: 22px; fill: none; stroke: currentColor; stroke-width: 2; }
 
-.proof-strip { padding: 105px 0 48px; background: var(--paper); }
-.proof-grid { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.proof-grid > div { padding: 27px 30px; border-right: 1px solid var(--line); }
-.proof-grid > div:first-child { padding-left: 0; }
+.proof-grid { position: relative; display: grid; grid-template-columns: repeat(4,1fr); background: var(--ink); color: #fffdf6; }
+.proof-grid::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--honey); }
+.proof-grid > div { position: relative; min-height: 118px; display: flex; flex-direction: column; justify-content: center; padding: 25px 30px 24px; border-right: 1px solid rgba(255,255,255,.13); }
 .proof-grid > div:last-child { border: 0; }
-.proof-grid strong { display: block; font-family: Georgia,serif; font-size: 29px; font-weight: 500; }
-.proof-grid span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+.proof-grid i { position: absolute; right: 18px; top: 15px; color: rgba(255,255,255,.24); font-size: 10px; font-style: normal; font-weight: 850; letter-spacing: 1px; }
+.proof-grid strong { display: block; max-width: 240px; font-family: Georgia,serif; font-size: 24px; line-height: 1.05; font-weight: 500; }
+.proof-grid span { display: block; margin-top: 9px; color: #9eada4; font-size: 11px; line-height: 1.35; }
+.featured-section { padding-top: 145px; }
 
 .section-heading { margin-bottom: 48px; }
 .split-heading { display: flex; justify-content: space-between; align-items: end; gap: 30px; }
@@ -449,16 +452,16 @@ img, svg { display: block; }
   .hero h1 { font-size: clamp(51px,14vw,72px); letter-spacing: -3px; }
   .hero-lead { font-size: 17px; }
   .hero-visual { min-height: 440px; transform: scale(.92); margin-top: -20px; }
-  .hero-search-wrap { transform: translateY(25px); }
+  .hero-search-wrap { margin-bottom: 25px; transform: translateY(25px); }
   .hero-search { grid-template-columns: 1fr 1fr; gap: 10px; min-height: 0; }
   .search-divider { display: none; }
   .search-wide { grid-column: 1 / -1; }
   .search-field { padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
   .search-submit { grid-column: 1 / -1; min-height: 54px; }
-  .proof-strip { padding-top: 75px; }
   .proof-grid { grid-template-columns: 1fr 1fr; }
-  .proof-grid > div { padding: 22px; border-bottom: 1px solid var(--line); }
-  .proof-grid > div:nth-child(2) { border-right: 0; }
+  .proof-grid > div { min-height: 108px; padding: 22px; }
+  .proof-grid > div:nth-of-type(2) { border-right: 0; }
+  .proof-grid > div:nth-of-type(-n+2) { border-bottom: 1px solid rgba(255,255,255,.13); }
   .split-heading { align-items: start; }
   .apiary-grid { grid-template-columns: 1fr 1fr; }
   .quality-grid { grid-template-columns: 1fr; }
@@ -498,7 +501,10 @@ img, svg { display: block; }
   .hero-search { grid-template-columns: 1fr; padding: 10px; }
   .search-wide, .search-submit { grid-column: auto; }
   .proof-grid { grid-template-columns: 1fr; }
-  .proof-grid > div { padding-left: 0; border-right: 0; }
+  .proof-grid > div { min-height: 96px; padding: 21px 24px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.13); }
+  .proof-grid > div:last-child { border-bottom: 0; }
+  .proof-grid strong { font-size: 22px; }
+  .proof-grid span { margin-top: 6px; }
   .split-heading { display: block; }
   .split-heading .text-link { margin-top: 22px; }
   .section-heading h2, .quality-intro h2, .role-panel h2, .final-cta h2, .page-hero h1, .auth-aside h1 { font-size: 42px; letter-spacing: -1.7px; }
