@@ -823,7 +823,8 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   return app;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.env.NODE_ENV !== 'test') {
+const executablePath = process.env.pm_exec_path || process.argv[1] || '';
+if (executablePath && resolve(executablePath) === fileURLToPath(import.meta.url) && process.env.NODE_ENV !== 'test') {
   const port = asInt(process.env.PORT, 1, 65535, 3031);
   const host = process.env.HOST || '127.0.0.1';
   const app = createApp();
