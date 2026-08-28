@@ -207,10 +207,9 @@ img, svg { display: block; }
 .footer-grid h3 { margin: 4px 0 20px; color: #d5dfd8; font-size: 11px; text-transform: uppercase; letter-spacing: 1.3px; }
 .footer-grid a, .footer-grid > div > span { display: block; margin: 12px 0; color: #8e9d93; font-size: 13px; }
 .footer-grid a:hover { color: var(--honey); }
-.footer-season { align-self: start; padding: 22px; border: 1px solid rgba(255,255,255,.12); border-radius: 18px; }
-.footer-season .pulse-dot { display: inline-block; margin: 0 10px 0 0; vertical-align: middle; }
-.footer-season > b { vertical-align: middle; }
-.footer-season p { margin: 10px 0 0; color: #8e9d93; font-size: 12px; line-height: 1.5; }
+.footer-season { align-self: start; display: grid; grid-template-columns: auto minmax(0,1fr); column-gap: 10px; align-items: center; padding: 22px; border: 1px solid rgba(255,255,255,.12); border-radius: 18px; }
+.footer-season .pulse-dot { display: block; margin: 0; }
+.footer-season p { grid-column: 1 / -1; margin: 10px 0 0; color: #8e9d93; font-size: 12px; line-height: 1.5; }
 .footer-bottom { margin-top: 60px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); display: flex; justify-content: space-between; color: #627269; font-size: 11px; }
 
 /* Catalog */
