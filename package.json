@@ -1,8 +1,8 @@
 {
-  "name": "medogram",
+  "name": "pchela-shop",
   "version": "0.1.0",
   "private": true,
-  "description": "Мёдограм — платформа прямых поставок мёда от пасек в магазины",
+  "description": "pchela.shop — платформа прямых поставок мёда от пасек в магазины",
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",

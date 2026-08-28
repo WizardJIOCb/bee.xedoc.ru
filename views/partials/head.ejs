@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f4b73f">
-  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'Прямые поставки мёда от пасек в магазины. Поиск по расстоянию, цене, объёму и качеству.' %>">
-  <title><%= title %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'pchela.shop — прямые поставки мёда от пасек в магазины. Поиск по расстоянию, цене, объёму и качеству.' %>">
+  <title><%= title %><%= String(title).includes('pchela.shop') ? '' : ' — pchela.shop' %></title>
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/styles.css?v=20260828.5">
   <script src="/assets/app.js" defer></script>

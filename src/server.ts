@@ -214,7 +214,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
 
   app.get('/health', (_request, response) => {
     const result = db.prepare('SELECT 1 AS ok').get() as { ok: number };
-    response.json({ status: result.ok === 1 ? 'ok' : 'degraded', service: 'medogram' });
+    response.json({ status: result.ok === 1 ? 'ok' : 'degraded', service: 'pchela.shop' });
   });
 
   app.get('/', (request, response) => {
@@ -225,12 +225,12 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
         (SELECT COALESCE(SUM(stock_kg), 0) FROM lots WHERE available = 1) AS stock,
         (SELECT COUNT(*) FROM lots WHERE available = 1) AS lots
     `).get();
-    response.render('home', { title: 'Мёдограм — мёд напрямую от пасек', featured, stats });
+    response.render('home', { title: 'pchela.shop — мёд напрямую от пасек', featured, stats });
   });
 
   app.get('/future_partners', (_request, response) => {
     response.render('future-partners', {
-      title: 'Будущие партнёры рядом с Октябрьским — Мёдограм',
+      title: 'Будущие партнёры рядом с Октябрьским — pchela.shop',
       partners: futurePartners,
       patterns: partnerPatterns,
     });
@@ -239,7 +239,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   app.get('/catalog', (request, response) => {
     const items = catalogItems(request.query);
     response.render('catalog', {
-      title: 'Каталог пасек — Мёдограм',
+      title: 'Каталог пасек — pchela.shop',
       items,
       filters: request.query,
       varieties: ['Башкирская липа', 'Горное разнотравье', 'Лесное разнотравье', 'Гречишный', 'Цветочный', 'Разнотравье'],
@@ -262,7 +262,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       favorited = Boolean(db.prepare('SELECT 1 FROM favorites WHERE user_id = ? AND apiary_id = ?').get(response.locals.currentUser.id, apiaryId));
     }
     return response.render('supplier', {
-      title: `${apiary.name} — поставщик мёда`, apiary, lots, city, favorited,
+      title: `${apiary.name} — поставщик мёда | pchela.shop`, apiary, lots, city, favorited,
     });
   });
 
@@ -270,7 +270,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     if (response.locals.currentUser) return response.redirect('/dashboard');
     const role = request.query.role === 'buyer' ? 'buyer' : 'supplier';
     return response.render('register', {
-      title: 'Создать аккаунт — Мёдограм', role, next: safeNext(request.query.next), error: '', values: {},
+      title: 'Создать аккаунт — pchela.shop', role, next: safeNext(request.query.next), error: '', values: {},
     });
   });
 
@@ -290,7 +290,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     else if (password.length < 8) error = 'Пароль должен быть не короче 8 символов.';
     else if (!displayName) error = 'Укажите имя.';
     else if (!cityCode) error = 'Выберите ближайший город.';
-    if (error) return response.status(400).render('register', { title: 'Создать аккаунт — Мёдограм', role, next: nextUrl, error, values });
+    if (error) return response.status(400).render('register', { title: 'Создать аккаунт — pchela.shop', role, next: nextUrl, error, values });
 
     try {
       db.exec('BEGIN IMMEDIATE');
@@ -316,7 +316,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       try { db.exec('ROLLBACK'); } catch { /* transaction was not started */ }
       const duplicate = String(errorValue).includes('UNIQUE');
       return response.status(400).render('register', {
-        title: 'Создать аккаунт — Мёдограм', role, next: nextUrl,
+        title: 'Создать аккаунт — pchela.shop', role, next: nextUrl,
         error: duplicate ? 'Аккаунт с таким email уже существует.' : 'Не удалось создать аккаунт. Попробуйте ещё раз.', values,
       });
     }
@@ -324,7 +324,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
 
   app.get('/login', (request, response) => {
     if (response.locals.currentUser) return response.redirect('/dashboard');
-    response.render('login', { title: 'Войти — Мёдограм', next: safeNext(request.query.next), error: '', email: '' });
+    response.render('login', { title: 'Войти — pchela.shop', next: safeNext(request.query.next), error: '', email: '' });
   });
 
   app.post('/login', authLimiter, (request, response) => {
@@ -333,7 +333,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     const nextUrl = safeNext(request.body.next);
     const user = db.prepare('SELECT * FROM users WHERE email = ? AND disabled = 0').get(email) as { id: number; password_hash: string } | undefined;
     if (!user || !verifyPassword(password, user.password_hash)) {
-      return response.status(401).render('login', { title: 'Войти — Мёдограм', next: nextUrl, error: 'Неверный email или пароль.', email });
+      return response.status(401).render('login', { title: 'Войти — pchela.shop', next: nextUrl, error: 'Неверный email или пароль.', email });
     }
     createSession(db, response, user.id, secureCookies);
     return response.redirect(nextUrl);
@@ -357,7 +357,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
         LEFT JOIN lots l ON l.id = i.lot_id
         WHERE i.apiary_id = ? ORDER BY i.created_at DESC
       `).all(apiaryId);
-      return response.render('dashboard-supplier', { title: 'Кабинет поставщика — Мёдограм', apiary, lots, inquiries });
+      return response.render('dashboard-supplier', { title: 'Кабинет поставщика — pchela.shop', apiary, lots, inquiries });
     }
 
     const inquiries = db.prepare(`
@@ -373,7 +373,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       LEFT JOIN lots l ON l.apiary_id = a.id AND l.available = 1
       WHERE f.user_id = ? GROUP BY a.id ORDER BY f.created_at DESC
     `).all(user.id);
-    return response.render('dashboard-buyer', { title: 'Кабинет закупщика — Мёдограм', inquiries, favorites });
+    return response.render('dashboard-buyer', { title: 'Кабинет закупщика — pchela.shop', inquiries, favorites });
   });
 
   app.post('/dashboard/profile', requireRole('supplier'), (_request, response) => {
@@ -487,5 +487,5 @@ if (existsSync(fileURLToPath(import.meta.url)) && process.env.NODE_ENV !== 'test
   const port = asInt(process.env.PORT, 1, 65535, 3031);
   const host = process.env.HOST || '127.0.0.1';
   const app = createApp();
-  app.listen(port, host, () => console.log(`Мёдограм слушает http://${host}:${port}`));
+  app.listen(port, host, () => console.log(`pchela.shop слушает http://${host}:${port}`));
 }

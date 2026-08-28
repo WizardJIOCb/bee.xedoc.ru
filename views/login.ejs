@@ -8,7 +8,7 @@
       <div class="auth-quote"><span>“</span><p>Покупателю важно понимать не только цену, но и откуда взялась каждая партия.</p></div>
     </div>
     <div class="auth-card">
-      <h2>Войти в Мёдограм</h2><p>Используйте email, с которым регистрировались.</p>
+      <h2>Войти в pchela.shop</h2><p>Используйте email, с которым регистрировались.</p>
       <% if (error) { %><div class="form-error"><span>!</span><%= error %></div><% } %>
       <form method="post" action="/login">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="next" value="<%= next %>">
