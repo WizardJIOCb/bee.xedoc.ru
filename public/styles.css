@@ -1244,7 +1244,7 @@ img, svg { display: block; }
 @media (max-width: 520px) {
   .publication-index-hero { padding: 65px 0; }
   .publication-index-heading h1, .publication-article h1 { font-size: 47px; }
-  .publication-tabs { margin-inline: -20px; padding-inline: 20px; }
+  .publication-tabs { width: 100%; margin-inline: 0; padding-inline: 0; }
   .publication-search { grid-template-columns: 1fr; }
   .publication-search input { min-height: 45px; }
   .publication-card-media { height: 220px; }
