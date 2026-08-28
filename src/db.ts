@@ -106,10 +106,58 @@ function migrate(db: DatabaseSync): void {
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS publications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      author_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      kind TEXT NOT NULL CHECK (kind IN ('news', 'event', 'article')),
+      status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'pending', 'published', 'rejected')),
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      excerpt TEXT NOT NULL DEFAULT '',
+      body_html TEXT NOT NULL DEFAULT '',
+      city_code TEXT NOT NULL DEFAULT '',
+      event_location TEXT NOT NULL DEFAULT '',
+      event_starts_at TEXT,
+      event_ends_at TEXT,
+      moderation_note TEXT NOT NULL DEFAULT '',
+      published_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS publication_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      publication_id INTEGER NOT NULL REFERENCES publications(id) ON DELETE CASCADE,
+      media_type TEXT NOT NULL CHECK (media_type IN ('image', 'video')),
+      url TEXT NOT NULL,
+      storage_path TEXT NOT NULL,
+      original_name TEXT NOT NULL DEFAULT '',
+      mime_type TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL DEFAULT 0,
+      caption TEXT NOT NULL DEFAULT '',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS publication_mentions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      publication_id INTEGER NOT NULL REFERENCES publications(id) ON DELETE CASCADE,
+      apiary_id INTEGER REFERENCES apiaries(id) ON DELETE CASCADE,
+      buyer_user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CHECK ((apiary_id IS NOT NULL AND buyer_user_id IS NULL) OR (apiary_id IS NULL AND buyer_user_id IS NOT NULL))
+    );
+
     CREATE INDEX IF NOT EXISTS lots_apiary_available_idx ON lots(apiary_id, available);
     CREATE INDEX IF NOT EXISTS inquiries_apiary_idx ON inquiries(apiary_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS admin_audit_created_idx ON admin_audit(created_at DESC);
+    CREATE INDEX IF NOT EXISTS publications_public_idx ON publications(status, kind, published_at DESC);
+    CREATE INDEX IF NOT EXISTS publications_author_idx ON publications(author_user_id, updated_at DESC);
+    CREATE INDEX IF NOT EXISTS publication_attachments_publication_idx ON publication_attachments(publication_id, sort_order, id);
+    CREATE INDEX IF NOT EXISTS publication_mentions_publication_idx ON publication_mentions(publication_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS publication_mentions_apiary_unique ON publication_mentions(publication_id, apiary_id) WHERE apiary_id IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS publication_mentions_buyer_unique ON publication_mentions(publication_id, buyer_user_id) WHERE buyer_user_id IS NOT NULL;
   `);
 
   ensureColumn(db, 'users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');

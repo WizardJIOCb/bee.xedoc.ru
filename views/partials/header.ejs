@@ -9,6 +9,7 @@
     </button>
     <nav class="main-nav" data-menu>
       <a class="<%= activePath === '/catalog' ? 'active' : '' %>" href="/catalog">Каталог пасек</a>
+      <a class="<%= ['/publications','/news','/events','/articles'].includes(activePath) || activePath.startsWith('/publications/') ? 'active' : '' %>" href="/publications">Новости и события</a>
       <a href="/#quality">Как проверяем</a>
       <a class="<%= activePath === '/future_partner_join' ? 'active' : '' %>" href="/future_partner_join">Для пчеловодов</a>
       <% if (currentUser) { %>

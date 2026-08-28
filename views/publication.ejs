@@ -1,0 +1,41 @@
+<%- include('partials/head', { title, bodyClass: 'publication-page', metaDescription: publication.excerpt }) %>
+<%- include('partials/header') %>
+<main>
+  <% if (isPreview) { %><div class="preview-banner">Предпросмотр · статус «<%= ({draft:'черновик',pending:'на модерации',rejected:'нужны изменения'})[publication.status] %>»</div><% } %>
+  <article class="publication-article">
+    <header class="publication-article-header container">
+      <a class="publication-back" href="<%= publication.kind === 'news' ? '/news' : publication.kind === 'event' ? '/events' : '/articles' %>">← <%= ({news:'Все новости',event:'Все события',article:'Все статьи'})[publication.kind] %></a>
+      <div class="publication-kind-row"><span class="publication-kind"><%= ({news:'Новость',event:'Событие',article:'Статья участника'})[publication.kind] %></span><% if (publication.kind !== 'event') { %><time><%= new Date((publication.published_at || publication.created_at) + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) %></time><% } %></div>
+      <h1><%= publication.title %></h1>
+      <% if (publication.excerpt) { %><p class="publication-lead"><%= publication.excerpt %></p><% } %>
+      <div class="publication-byline"><span class="avatar"><%= publication.author_name.slice(0, 1).toUpperCase() %></span><div><small>Автор публикации</small><strong><%= publication.author_company || publication.author_name %></strong></div></div>
+    </header>
+
+    <% if (publication.kind === 'event') { %>
+      <section class="container event-facts">
+        <div><small>Начало</small><strong><%= new Date(publication.event_starts_at).toLocaleString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></strong></div>
+        <% if (publication.event_ends_at) { %><div><small>Окончание</small><strong><%= new Date(publication.event_ends_at).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) %></strong></div><% } %>
+        <% if (publication.event_location || publication.city_code) { %><div><small>Где</small><strong><%= publication.event_location || cityMap.get(publication.city_code)?.name %></strong><% if (publication.event_location && publication.city_code) { %><span><%= cityMap.get(publication.city_code)?.name %></span><% } %></div><% } %>
+      </section>
+    <% } %>
+
+    <% const imageAttachments = attachments.filter(item => item.media_type === 'image'); %>
+    <% if (imageAttachments.length) { %>
+      <section class="publication-cover container"><img src="<%= imageAttachments[0].url %>" alt="<%= imageAttachments[0].caption || publication.title %>"><% if (imageAttachments[0].caption) { %><p><%= imageAttachments[0].caption %></p><% } %></section>
+    <% } %>
+
+    <div class="publication-content"><%- publication.body_html %></div>
+
+    <% const remainingAttachments = attachments.filter((item, index) => item.media_type === 'video' || index > 0); %>
+    <% if (remainingAttachments.length) { %>
+      <section class="container publication-gallery" aria-label="Вложения">
+        <% remainingAttachments.forEach(item => { %><figure class="publication-media publication-media-<%= item.media_type %>"><% if (item.media_type === 'image') { %><img src="<%= item.url %>" alt="<%= item.caption || '' %>"><% } else { %><video src="<%= item.url %>" controls preload="metadata"></video><% } %><% if (item.caption) { %><figcaption><%= item.caption %></figcaption><% } %></figure><% }) %>
+      </section>
+    <% } %>
+
+    <% if (mentions.length) { %>
+      <section class="container publication-mentions"><span class="section-kicker">Участники публикации</span><h2>Кто здесь отмечен</h2><div class="mention-cards"><% mentions.forEach(mention => { %><% if (mention.apiary_id) { %><a href="/suppliers/<%= mention.apiary_slug %>"><span>⬡</span><div><small>Пасека</small><strong><%= mention.apiary_name %></strong></div><b>→</b></a><% } else { %><div><span>▣</span><div><small>Магазин · <%= cityMap.get(mention.buyer_city_code)?.name || 'участник платформы' %></small><strong><%= mention.buyer_name %></strong></div></div><% } %><% }) %></div></section>
+    <% } %>
+  </article>
+</main>
+<%- include('partials/footer') %>

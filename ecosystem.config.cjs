@@ -13,6 +13,7 @@ module.exports = {
       HOST: '127.0.0.1',
       PORT: '3031',
       DATABASE_PATH: '/var/www/bee.xedoc.ru/data/medogram.sqlite',
+      MEDIA_ROOT: '/var/www/bee.xedoc.ru/data/uploads',
       ADMIN_EMAIL: 'rodion89@list.ru',
       TRUST_PROXY: '1'
     }

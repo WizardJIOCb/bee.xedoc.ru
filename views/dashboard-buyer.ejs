@@ -11,6 +11,7 @@
       <div class="dashboard-card-heading"><div><span class="section-kicker">На заметку</span><h2>Избранные пасеки</h2></div><span><%= favorites.length %></span></div>
       <% if (favorites.length) { %><div class="favorite-list"><% favorites.forEach(apiary => { const city = cityMap.get(apiary.city_code); %><a href="/suppliers/<%= apiary.slug %>"><span class="favorite-mark accent-<%= apiary.accent %>">⬡</span><div><h3><%= apiary.name %></h3><p><%= city?.name || '' %> · <%= number(apiary.stock_kg || 0) %> кг в наличии</p></div><strong><%= apiary.min_price ? money(apiary.min_price) + '/кг' : 'по запросу' %></strong><span>→</span></a><% }) %></div><% } else { %><div class="empty-inline"><span>☆</span><div><h3>Сохраняйте интересные хозяйства</h3><p>Кнопка «В избранное» есть на каждой странице пасеки.</p></div></div><% } %>
     </div>
+    <section class="dashboard-card publication-dashboard-cta"><div><span class="section-kicker">Материалы магазина</span><h2>Расскажите о событии или опыте</h2><p>Создавайте анонсы, отмечайте пасеки и публикуйте полезные статьи для участников рынка.</p></div><div><a class="button button-primary" href="/dashboard/publications/new">+ Создать материал</a><a class="text-link" href="/dashboard/publications">Мои публикации →</a></div></section>
     <%- include('partials/account-settings') %>
   </section>
 </main>

@@ -1,0 +1,71 @@
+<%- include('partials/head', { title, bodyClass: 'dashboard-page publication-editor-page' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="dashboard-hero publication-editor-hero">
+    <div class="container dashboard-hero-row"><div><a class="publication-back" href="<%= isAdminEditor ? '/admin/publications' : '/dashboard/publications' %>">← К публикациям</a><span class="section-kicker"><%= publication.id ? 'Редактирование' : 'Новый материал' %></span><h1><%= publication.id ? publication.title : 'Расскажите, что происходит.' %></h1><p>Текст, медиа и участники события собраны в одном редакторе.</p></div><% if (publication.id) { %><a class="button button-outline-dark" href="/publications/<%= publication.slug %>">Предпросмотр ↗</a><% } %></div>
+  </section>
+
+  <section class="container publication-editor-layout">
+    <% if (error) { %><div class="form-error publication-editor-error"><span>!</span><%= error %></div><% } %>
+    <% if (publication.moderation_note) { %><div class="moderation-note"><strong>Комментарий редактора</strong><p><%= publication.moderation_note %></p></div><% } %>
+    <form id="publication-form" class="publication-editor-form" method="post" enctype="multipart/form-data" action="<%= publication.id ? `/dashboard/publications/${publication.id}` : '/dashboard/publications' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <section class="dashboard-card editor-main-card">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Формат</span><h2>Основа публикации</h2></div><span>обязательные поля</span></div>
+        <div class="publication-type-picker">
+          <% [{value:'news',icon:'↗',name:'Новость',help:'Факт или обновление'}, {value:'event',icon:'◷',name:'Событие',help:'Дата, место и участники'}, {value:'article',icon:'¶',name:'Статья',help:'Опыт, разбор или история'}].forEach(type => { %>
+            <label><input type="radio" name="kind" value="<%= type.value %>" <%= publication.kind === type.value ? 'checked' : '' %> required><span><i><%= type.icon %></i><b><%= type.name %></b><small><%= type.help %></small></span></label>
+          <% }) %>
+        </div>
+        <label class="field"><span>Заголовок</span><input name="title" maxlength="180" value="<%= publication.title %>" required placeholder="Например: Пасека «Белая река» будет на ярмарке в Уфе"></label>
+        <label class="field"><span>Короткое описание</span><textarea name="excerpt" rows="3" maxlength="360" placeholder="Два-три предложения для карточки публикации. Если оставить пустым, соберём из начала текста."><%= publication.excerpt %></textarea><small>До 360 знаков. Оно видно в общей ленте и помогает быстро понять суть.</small></label>
+      </section>
+
+      <section class="dashboard-card editor-main-card">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Текст</span><h2>Редактор статьи</h2></div><span>без знания HTML</span></div>
+        <div class="rich-editor" data-rich-editor>
+          <div class="rich-toolbar" role="toolbar" aria-label="Форматирование текста">
+            <button type="button" data-editor-block="p" title="Обычный текст">Текст</button>
+            <button type="button" data-editor-block="h2" title="Заголовок раздела">H2</button>
+            <button type="button" data-editor-command="bold" title="Жирный"><b>Ж</b></button>
+            <button type="button" data-editor-command="italic" title="Курсив"><i>К</i></button>
+            <button type="button" data-editor-command="insertUnorderedList" title="Маркированный список">• Список</button>
+            <button type="button" data-editor-block="blockquote" title="Цитата">❝ Цитата</button>
+            <button type="button" data-editor-link title="Добавить ссылку">↗ Ссылка</button>
+            <button type="button" data-editor-command="removeFormat" title="Очистить форматирование">Очистить</button>
+          </div>
+          <div class="rich-surface" contenteditable="true" data-editor-surface data-placeholder="Начните с главного: что произошло или почему событие стоит посетить…"><%- publication.body_html %></div>
+          <textarea name="body_html" data-editor-output hidden><%= publication.body_html %></textarea>
+        </div>
+        <p class="editor-hint">Совет: разбивайте длинный текст подзаголовками и списками — так материал проще читать с телефона.</p>
+      </section>
+
+      <section class="dashboard-card event-editor-fields" data-event-fields <%= publication.kind === 'event' ? '' : 'hidden' %>>
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Когда и где</span><h2>Детали события</h2></div><span>для календаря читателя</span></div>
+        <div class="filter-two"><label class="field"><span>Начало</span><input type="datetime-local" name="event_starts_at" value="<%= publication.event_starts_at ? String(publication.event_starts_at).slice(0,16) : '' %>"></label><label class="field"><span>Окончание</span><input type="datetime-local" name="event_ends_at" value="<%= publication.event_ends_at ? String(publication.event_ends_at).slice(0,16) : '' %>"></label></div>
+        <div class="filter-two"><label class="field"><span>Ближайший город</span><select name="city_code"><option value="">Не выбран</option><% cities.forEach(city => { %><option value="<%= city.code %>" <%= publication.city_code === city.code ? 'selected' : '' %>><%= city.name %></option><% }) %></select></label><label class="field"><span>Площадка или адрес</span><input name="event_location" maxlength="240" value="<%= publication.event_location %>" placeholder="ВДНХ-Экспо, ул. Менделеева, 158"></label></div>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Фото и видео</span><h2>Вложения</h2></div><span>до 8 файлов</span></div>
+        <% if (attachments.length) { %><div class="attachment-editor-grid"><% attachments.forEach(item => { %><article><div class="attachment-preview"><% if (item.media_type === 'image') { %><img src="<%= item.url %>" alt=""><% } else { %><video src="<%= item.url %>" controls preload="metadata"></video><% } %></div><label class="field"><span>Подпись</span><input name="attachment_caption_<%= item.id %>" maxlength="240" value="<%= item.caption %>" placeholder="Что изображено"></label><label class="attachment-remove"><input type="checkbox" name="remove_attachments" value="<%= item.id %>"> Удалить при сохранении</label></article><% }) %></div><% } %>
+        <label class="media-dropzone" data-file-dropzone><input type="file" name="attachments" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple><span>＋</span><strong>Добавить картинки или видео</strong><small>JPG, PNG, WebP, GIF, MP4, WebM или MOV · до 60 МБ на файл</small><em data-file-summary>Можно выбрать несколько файлов</em></label>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Участники</span><h2>Отметить пасеки и магазины</h2></div><span>появятся в материале</span></div>
+        <div class="mention-picker-grid">
+          <div class="mention-picker"><div class="mention-picker-head"><div><span>⬡</span><b>Пасеки</b></div><input type="search" placeholder="Найти пасеку" data-mention-search="apiaries"></div><div class="mention-list" data-mention-list="apiaries"><% candidates.apiaries.forEach(apiary => { %><label data-mention-label="<%= String(apiary.name).toLowerCase() %>"><input type="checkbox" name="apiary_mentions" value="<%= apiary.id %>" <%= selectedApiaryIds.includes(Number(apiary.id)) ? 'checked' : '' %>><span><b><%= apiary.name %></b><small><%= apiary.published ? 'в каталоге' : 'ваша пасека · черновик' %></small></span></label><% }) %><% if (!candidates.apiaries.length) { %><p>Пока нет доступных пасек.</p><% } %></div></div>
+          <div class="mention-picker"><div class="mention-picker-head"><div><span>▣</span><b>Магазины</b></div><input type="search" placeholder="Найти магазин" data-mention-search="buyers"></div><div class="mention-list" data-mention-list="buyers"><% candidates.buyers.forEach(buyer => { const buyerName = buyer.company_name || buyer.display_name; %><label data-mention-label="<%= String(buyerName).toLowerCase() %>"><input type="checkbox" name="buyer_mentions" value="<%= buyer.id %>" <%= selectedBuyerIds.includes(Number(buyer.id)) ? 'checked' : '' %>><span><b><%= buyerName %></b><small><%= cityMap.get(buyer.city_code)?.name || 'город не указан' %></small></span></label><% }) %><% if (!candidates.buyers.length) { %><p>Магазины появятся после первой заявки или доступны администратору.</p><% } %></div></div>
+        </div>
+      </section>
+
+      <section class="publication-submit-bar">
+        <div><strong><%= isAdminEditor ? 'Публикация и модерация' : 'Готово к отправке?' %></strong><p><%= isAdminEditor ? 'Выберите статус и сохраните изменения.' : 'Черновик видите только вы. После отправки материал проверит редактор.' %></p></div>
+        <% if (isAdminEditor) { %><label class="status-select"><span>Статус</span><select name="status"><option value="published" <%= publication.status === 'published' ? 'selected' : '' %>>Опубликовано</option><option value="pending" <%= publication.status === 'pending' ? 'selected' : '' %>>На модерации</option><option value="draft" <%= publication.status === 'draft' ? 'selected' : '' %>>Черновик</option><option value="rejected" <%= publication.status === 'rejected' ? 'selected' : '' %>>Нужны изменения</option></select></label><% } %>
+        <div class="publication-submit-actions"><button class="button button-outline-dark" type="submit" name="submit_action" value="save_draft">Сохранить черновик</button><button class="button button-primary" type="submit" name="submit_action" value="submit"><%= isAdminEditor ? 'Сохранить' : 'Отправить на модерацию' %></button></div>
+      </section>
+    </form>
+  </section>
+</main>
+<%- include('partials/footer') %>

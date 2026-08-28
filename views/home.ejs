@@ -85,6 +85,16 @@
     </div>
   </section>
 
+  <section class="section home-publications-section">
+    <div class="container">
+      <div class="section-heading split-heading">
+        <div><span class="section-kicker">Жизнь сообщества</span><h2>Встречи, новости<br>и опыт участников.</h2></div>
+        <a class="text-link" href="/publications">Все публикации <span>→</span></a>
+      </div>
+      <% if (featuredPublications.length) { %><div class="publication-grid"><% featuredPublications.forEach(item => { %><%- include('partials/publication-card', { item }) %><% }) %></div><% } else { %><div class="home-publications-empty"><span>◷</span><div><h3>Собираем первую редакционную ленту</h3><p>Здесь будут анонсы ярмарок, новости пасек и практические статьи магазинов и пчеловодов.</p></div><a class="button button-outline-dark" href="<%= currentUser ? '/dashboard/publications/new' : '/register' %>"><%= currentUser ? 'Создать материал' : 'Стать автором' %></a></div><% } %>
+    </div>
+  </section>
+
   <section class="section quality-section" id="quality">
     <div class="container quality-grid">
       <div class="quality-intro">

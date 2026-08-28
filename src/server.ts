@@ -8,6 +8,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { createSession, destroySession, getCurrentUser, hashPassword, randomToken, verifyPassword, type CurrentUser } from './auth.js';
 import { openDatabase } from './db.js';
 import { futurePartners, partnerPatterns } from './future-partners.js';
+import { createPublicationRouter, getFeaturedPublications } from './publications.js';
 import { asFloat, asInt, asText, cities, cityMap, distanceBetween, money, number, safeNext, slugify } from './utils.js';
 
 type CatalogItem = Record<string, unknown> & {
@@ -54,6 +55,7 @@ const moduleDir = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(moduleDir, '..');
 const production = process.env.NODE_ENV === 'production';
 const databasePath = process.env.DATABASE_PATH || resolve(projectRoot, 'data', 'medogram.sqlite');
+const mediaRoot = process.env.MEDIA_ROOT || resolve(dirname(databasePath), 'uploads');
 const secureCookies = production;
 const configuredAdminEmail = () => String(process.env.ADMIN_EMAIL || '').trim().toLocaleLowerCase('ru');
 const coverChoices = [
@@ -88,9 +90,13 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     },
     crossOriginEmbedderPolicy: false,
   }));
-  app.use(express.urlencoded({ extended: false, limit: '64kb' }));
-  app.use(express.json({ limit: '64kb' }));
+  app.use(express.urlencoded({ extended: false, limit: '512kb' }));
+  app.use(express.json({ limit: '512kb' }));
   app.use('/assets', express.static(resolve(projectRoot, 'public'), {
+    maxAge: production ? '7d' : 0,
+    etag: true,
+  }));
+  app.use('/media', express.static(mediaRoot, {
     maxAge: production ? '7d' : 0,
     etag: true,
   }));
@@ -120,6 +126,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
 
   app.use((request, response, next) => {
     if (request.method === 'GET' || request.method === 'HEAD' || request.method === 'OPTIONS') return next();
+    if (request.is('multipart/form-data')) return next();
     if (asText(request.body?._csrf, 100) !== response.locals.csrfToken) {
       return response.status(403).render('error', {
         title: 'Форма устарела',
@@ -177,6 +184,8 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     legacyHeaders: false,
     message: 'Слишком много заявок за короткое время. Попробуйте позже.',
   });
+
+  app.use(createPublicationRouter(db, { mediaRoot, requireAuth, requireAdmin, auditAdmin }));
 
   function catalogItems(query: Request['query'], limit?: number): CatalogItem[] {
     const rows = db.prepare(`
@@ -244,13 +253,14 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
 
   app.get('/', (request, response) => {
     const featured = catalogItems({ from: 'ufa' }, 3);
+    const featuredPublications = getFeaturedPublications(db, 3);
     const stats = db.prepare(`
       SELECT
         (SELECT COUNT(*) FROM apiaries WHERE published = 1) AS apiaries,
         (SELECT COALESCE(SUM(stock_kg), 0) FROM lots WHERE available = 1) AS stock,
         (SELECT COUNT(*) FROM lots WHERE available = 1) AS lots
     `).get();
-    response.render('home', { title: 'pchela.shop — мёд напрямую от пасек', featured, stats });
+    response.render('home', { title: 'pchela.shop — мёд напрямую от пасек', featured, featuredPublications, stats });
   });
 
   app.get('/future_partners', (_request, response) => {
@@ -551,7 +561,9 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
         (SELECT COALESCE(SUM(stock_kg), 0) FROM lots WHERE available = 1) AS stock_kg,
         (SELECT COUNT(*) FROM inquiries) AS inquiries,
         (SELECT COUNT(*) FROM inquiries WHERE status = 'new') AS new_inquiries,
-        (SELECT COUNT(*) FROM inquiries WHERE status = 'agreed') AS agreed_inquiries
+        (SELECT COUNT(*) FROM inquiries WHERE status = 'agreed') AS agreed_inquiries,
+        (SELECT COUNT(*) FROM publications) AS publications,
+        (SELECT COUNT(*) FROM publications WHERE status = 'pending') AS pending_publications
     `).get() as Record<string, number>;
 
     const q = asText(request.query.q, 100);
@@ -724,6 +736,15 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   app.use((error: unknown, _request: Request, response: Response, _next: NextFunction) => {
     console.error(error);
     if (response.headersSent) return;
+    const uploadCode = error && typeof error === 'object' && 'code' in error ? String(error.code) : '';
+    const uploadMessage = error instanceof Error ? error.message : '';
+    if (uploadCode.startsWith('LIMIT_') || uploadMessage.startsWith('Поддерживаются ')) {
+      response.status(400).render('error', {
+        title: 'Не удалось загрузить файл', status: 400,
+        message: uploadCode === 'LIMIT_FILE_SIZE' ? 'Один файл не должен быть больше 60 МБ.' : uploadMessage || 'Проверьте количество и формат вложений.',
+      });
+      return;
+    }
     response.status(500).render('error', {
       title: 'Что-то пошло не так', status: 500,
       message: 'Мы уже знаем о проблеме. Попробуйте обновить страницу через минуту.',

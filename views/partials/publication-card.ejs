@@ -1,0 +1,19 @@
+<article class="publication-card publication-card-<%= item.kind %>">
+  <a class="publication-card-media" href="/publications/<%= item.slug %>">
+    <% if (item.cover_url) { %><img src="<%= item.cover_url %>" alt=""><% } else { %><span aria-hidden="true"><%= item.kind === 'event' ? '◷' : item.kind === 'news' ? '↗' : '¶' %></span><% } %>
+    <b class="publication-kind"><%= ({ news: 'Новость', event: 'Событие', article: 'Статья' })[item.kind] %></b>
+  </a>
+  <div class="publication-card-body">
+    <div class="publication-meta">
+      <% if (item.kind === 'event' && item.event_starts_at) { %>
+        <time datetime="<%= item.event_starts_at %>"><%= new Date(item.event_starts_at).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) %></time>
+      <% } else { %>
+        <time datetime="<%= item.published_at %>"><%= new Date((item.published_at || item.created_at) + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) %></time>
+      <% } %>
+      <% if (item.mentions_count) { %><span><%= item.mentions_count %> упомин.</span><% } %>
+    </div>
+    <h3><a href="/publications/<%= item.slug %>"><%= item.title %></a></h3>
+    <p><%= item.excerpt %></p>
+    <div class="publication-author"><span class="avatar"><%= item.author_name.slice(0, 1).toUpperCase() %></span><span><small><%= item.kind === 'article' ? 'Автор' : 'Опубликовал' %></small><b><%= item.author_company || item.author_name %></b></span></div>
+  </div>
+</article>

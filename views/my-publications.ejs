@@ -1,0 +1,13 @@
+<%- include('partials/head', { title, bodyClass: 'dashboard-page' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="dashboard-hero"><div class="container dashboard-hero-row"><div><span class="section-kicker">Личный кабинет</span><h1>Мои публикации</h1><p>Черновики, материалы на модерации и уже опубликованные истории.</p></div><a class="button button-primary" href="/dashboard/publications/new">+ Новый материал</a></div></section>
+  <section class="container publication-manager-layout">
+    <aside class="publication-manager-aside"><a href="/dashboard">← Вернуться в кабинет</a><p>Новости и события помогают рассказать, где вас найти. Статьи — поделиться опытом и пользой.</p></aside>
+    <div class="dashboard-card">
+      <div class="dashboard-card-heading"><div><span class="section-kicker">Ваши материалы</span><h2>Все публикации</h2></div><span><%= items.length %> всего</span></div>
+      <% if (items.length) { %><div class="publication-manager-list"><% items.forEach(item => { %><article><div class="publication-manager-thumb"><% if (item.cover_url) { %><img src="<%= item.cover_url %>" alt=""><% } else { %><span><%= item.kind === 'event' ? '◷' : item.kind === 'news' ? '↗' : '¶' %></span><% } %></div><div><div class="badges"><span class="publication-kind"><%= ({news:'Новость',event:'Событие',article:'Статья'})[item.kind] %></span><span class="status-pill publication-status-<%= item.status %>"><%= ({draft:'черновик',pending:'на модерации',published:'опубликовано',rejected:'нужны изменения'})[item.status] %></span></div><h3><%= item.title %></h3><p>Обновлено <%= new Date(item.updated_at + 'Z').toLocaleString('ru-RU') %><% if (item.moderation_note) { %> · есть комментарий редактора<% } %></p></div><div class="publication-manager-actions"><a class="button button-small button-outline-dark" href="/dashboard/publications/<%= item.id %>/edit">Редактировать</a><a class="mini-action" href="/publications/<%= item.slug %>">Предпросмотр</a><form method="post" action="/dashboard/publications/<%= item.id %>/delete" data-confirm="Удалить публикацию и все её вложения?"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="mini-action danger" type="submit">Удалить</button></form></div></article><% }) %></div><% } else { %><div class="publication-empty compact"><span>¶</span><h2>Здесь пока пусто</h2><p>Создайте новость, анонс события или первую авторскую статью.</p><a class="button button-primary" href="/dashboard/publications/new">Создать публикацию</a></div><% } %>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>

@@ -1,0 +1,28 @@
+<%- include('partials/head', { title, bodyClass: 'publications-page', metaDescription: 'Новости рынка мёда, предстоящие события пасек и магазинов, практические статьи участников pchela.shop.' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="publication-index-hero">
+    <div class="container publication-index-heading">
+      <div><span class="section-kicker">Жизнь сообщества</span><h1>Новости, события<br>и полезный опыт.</h1><p>Следите, где встретить пасеки и магазины, что меняется на рынке и чем делятся участники платформы.</p></div>
+      <% if (currentUser) { %><a class="button button-primary" href="/dashboard/publications/new">+ Создать публикацию</a><% } else { %><a class="button button-primary" href="/register">Стать автором</a><% } %>
+    </div>
+  </section>
+  <section class="container publication-index">
+    <nav class="publication-tabs" aria-label="Тип публикации">
+      <a class="<%= !filterKind ? 'active' : '' %>" href="/publications">Все</a>
+      <a class="<%= filterKind === 'news' ? 'active' : '' %>" href="/news">Новости</a>
+      <a class="<%= filterKind === 'event' ? 'active' : '' %>" href="/events">События</a>
+      <a class="<%= filterKind === 'article' ? 'active' : '' %>" href="/articles">Статьи участников</a>
+    </nav>
+    <form class="publication-search" method="get">
+      <input type="search" name="q" value="<%= q %>" placeholder="Найти событие, пасеку или тему">
+      <button class="button button-dark" type="submit">Найти</button>
+    </form>
+    <% if (items.length) { %>
+      <div class="publication-grid"><% items.forEach(item => { %><%- include('partials/publication-card', { item }) %><% }) %></div>
+    <% } else { %>
+      <div class="publication-empty"><span>⬡</span><h2><%= q ? 'Ничего не нашли' : 'Первые материалы готовятся' %></h2><p><%= q ? 'Попробуйте изменить запрос или открыть все публикации.' : 'Здесь появятся новости, анонсы событий и статьи участников pchela.shop.' %></p><% if (q) { %><a class="button button-outline-dark" href="/publications">Показать всё</a><% } %></div>
+    <% } %>
+  </section>
+</main>
+<%- include('partials/footer') %>
