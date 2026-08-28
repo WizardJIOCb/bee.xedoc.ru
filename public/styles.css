@@ -569,8 +569,8 @@ img, svg { display: block; }
 .future-partners-page { background: #fffdf6; }
 .partners-hero { overflow: hidden; padding: 88px 0 76px; background: radial-gradient(circle at 84% 18%, rgba(244,182,63,.34), transparent 28%), var(--cream); border-bottom: 1px solid var(--line); }
 .partners-hero-grid { display: grid; grid-template-columns: minmax(0,1.55fr) minmax(310px,.65fr); gap: 70px; align-items: center; }
-.eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--green); font-size: 12px; font-weight: 850; letter-spacing: 1.3px; text-transform: uppercase; }
-.eyebrow::before { content: ''; width: 27px; height: 2px; background: var(--honey-dark); }
+.future-partners-page .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: var(--green); font-size: 12px; font-weight: 850; letter-spacing: 1.3px; text-transform: uppercase; }
+.future-partners-page .eyebrow::before { content: ''; width: 27px; height: 2px; background: var(--honey-dark); }
 .partners-hero h1, .partners-section-heading h2, .offer-intro h2 { margin: 20px 0 0; max-width: 900px; font-family: Georgia,"Times New Roman",serif; font-size: clamp(48px,6.1vw,88px); line-height: .95; letter-spacing: -3.6px; font-weight: 500; }
 .partners-lead { max-width: 760px; margin: 27px 0 0; color: var(--muted); font-size: 19px; line-height: 1.65; }
 .partners-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
