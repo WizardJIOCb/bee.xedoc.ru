@@ -10,7 +10,7 @@
     <nav class="main-nav" data-menu>
       <a class="<%= activePath === '/catalog' ? 'active' : '' %>" href="/catalog">Каталог пасек</a>
       <a href="/#quality">Как проверяем</a>
-      <a href="/#suppliers">Для пчеловодов</a>
+      <a class="<%= activePath === '/future_partner_join' ? 'active' : '' %>" href="/future_partner_join">Для пчеловодов</a>
       <% if (currentUser) { %>
         <% if (currentUser.is_admin) { %><a class="nav-admin <%= activePath.startsWith('/admin') ? 'active' : '' %>" href="/admin">Админка</a><% } %>
         <a class="nav-account" href="/dashboard">

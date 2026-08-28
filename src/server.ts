@@ -261,6 +261,18 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     });
   });
 
+  app.get('/future_partner_join', (_request, response) => {
+    response.render('future-partner-join', {
+      title: 'Продавать мёд магазинам',
+    });
+  });
+
+  app.get('/future_retail_join', (_request, response) => {
+    response.render('future-retail-join', {
+      title: 'Закупать мёд напрямую у пасек',
+    });
+  });
+
   app.get('/catalog', (request, response) => {
     const items = catalogItems(request.query);
     response.render('catalog', {

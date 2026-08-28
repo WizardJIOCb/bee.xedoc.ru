@@ -1,0 +1,139 @@
+<%- include('partials/head', {
+  title,
+  bodyClass: 'join-page join-retail-page',
+  metaDescription: 'pchela.shop помогает магазинам сравнить пасеки по цене, объёму, расстоянию и качеству, сохранить поставщиков и отправить запрос на поставку.'
+}) %>
+<%- include('partials/header') %>
+
+<main>
+  <section class="join-hero retail-join-hero">
+    <div class="container">
+      <nav class="join-role-tabs" aria-label="Выберите вашу роль">
+        <a href="/future_partner_join"><span>Я произвожу мёд</span><b>Для пасек</b></a>
+        <a class="active" href="/future_retail_join"><span>Я закупаю мёд</span><b>Для магазинов</b></a>
+      </nav>
+      <div class="join-hero-grid">
+        <div class="join-hero-copy">
+          <span class="join-kicker">Закупки через pchela.shop</span>
+          <h1>Закупайте мёд по условиям, а не по сообщениям в десяти чатах.</h1>
+          <p>Сравните пасеки по расстоянию, цене, доступному объёму и качеству. Сохраните подходящих поставщиков и отправьте запрос с понятной потребностью.</p>
+          <div class="join-actions">
+            <a class="button button-primary button-large" href="/register?role=buyer">Создать аккаунт закупщика <span>→</span></a>
+            <a class="button button-outline-dark button-large" href="/catalog">Открыть каталог</a>
+          </div>
+          <div class="join-trust"><span>Каталог открыт без регистрации</span><span>Прямой контакт с пасекой</span><span>Без скрытых условий</span></div>
+        </div>
+
+        <div class="join-showcase retail-showcase" aria-label="Пример поиска и заявки закупщика">
+          <div class="showcase-browser"><i></i><i></i><i></i><span>pchela.shop/catalog</span></div>
+          <div class="retail-search-preview">
+            <small>Найти поставщика рядом</small>
+            <div><span>Откуда</span><b>Уфа</b></div>
+            <div><span>Объём партии</span><b>от 100 кг</b></div>
+            <button type="button" tabindex="-1">Найти пасеки</button>
+          </div>
+          <div class="retail-result-preview">
+            <div class="retail-result-head"><span class="showcase-logo">БР</span><div><small>Профиль проверен</small><h2>Пасека «Белая река»</h2><p>130 км · анализ партии</p></div><b>☆</b></div>
+            <div class="retail-result-lot"><div><small>Башкирская липа</small><strong>1 350 кг</strong></div><div><small>От 100 кг</small><strong>610 ₽/кг</strong></div></div>
+          </div>
+          <div class="showcase-alert retail-alert"><span>✓</span><div><b>Запрос отправлен</b><small>200 кг · доставка в Уфу</small></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="join-proof-strip retail-proof-strip">
+    <div class="container">
+      <article><strong>1 каталог</strong><span>вместо разрозненных контактов</span></article>
+      <article><strong>До звонка</strong><span>цена, остаток и минимальный заказ</span></article>
+      <article><strong>4 статуса</strong><span>вся история запросов в кабинете</span></article>
+      <article><strong>Напрямую</strong><span>условия согласуются с пасекой</span></article>
+    </div>
+  </section>
+
+  <section class="section retail-visibility-section">
+    <div class="container join-split-heading">
+      <div><span class="join-kicker">До первого разговора</span><h2>Сразу видно, подходит ли поставщик.</h2></div>
+      <p>Открыть каталог можно без аккаунта. Регистрация понадобится, когда вы захотите сохранить пасеку или отправить ей запрос на поставку.</p>
+    </div>
+    <div class="container retail-facts-grid">
+      <article><span>⌖</span><h3>География</h3><p>Город, район и расстояние от вашей точки.</p></article>
+      <article><span>₽</span><h3>Экономика</h3><p>Цена за килограмм и минимальный объём заказа.</p></article>
+      <article><span>◫</span><h3>Наличие</h3><p>Доступный остаток, урожай, форма и тара.</p></article>
+      <article><span>✓</span><h3>Качество</h3><p>Паспорт пасеки, анализы и статус проверки профиля.</p></article>
+      <article><span>→</span><h3>Логистика</h3><p>Самовывоз, доставка хозяйством или транспортная компания.</p></article>
+      <article><span>☆</span><h3>Выбор</h3><p>Избранные хозяйства остаются в кабинете закупщика.</p></article>
+    </div>
+  </section>
+
+  <section class="join-dark-section retail-dark-section">
+    <div class="container">
+      <div class="join-split-heading join-split-light">
+        <div><span class="join-kicker">Как проходит закупка</span><h2>От фильтра до договорённости — четыре шага.</h2></div>
+        <p>Платформа не подменяет ваши закупочные процедуры. Она сокращает время до предметного контакта и сохраняет ход работы с поставщиками.</p>
+      </div>
+      <ol class="join-steps">
+        <li><span>1</span><div><small>Без аккаунта</small><h3>Сравните пасеки</h3><p>Задайте город, объём, цену, сорт и важные признаки качества.</p></div></li>
+        <li><span>2</span><div><small>В профиле</small><h3>Проверьте условия</h3><p>Посмотрите партии, историю хозяйства, документы и доставку.</p></div></li>
+        <li><span>3</span><div><small>Одна форма</small><h3>Отправьте запрос</h3><p>Укажите объём, город доставки и важные требования.</p></div></li>
+        <li><span>4</span><div><small>Напрямую</small><h3>Согласуйте сделку</h3><p>Обсудите образец, документы, оплату и отгрузку с поставщиком.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section retail-usecases-section">
+    <div class="container join-split-heading">
+      <div><span class="join-kicker">Для разного формата торговли</span><h2>Поставщик под вашу полку и объём.</h2></div>
+      <p>Локальный мёд может быть основной категорией, сезонным предложением или частью подарочного набора. Запрос формулируете вы.</p>
+    </div>
+    <div class="container retail-usecases">
+      <article><small>01</small><h3>Продуктовый магазин</h3><p>Регулярные партии в таре с понятным графиком поставки.</p><span>Наличие · цена · доставка</span></article>
+      <article><small>02</small><h3>Фермерская лавка</h3><p>Мёд с историей происхождения и прямым контактом хозяйства.</p><span>Пасека · сорт · документы</span></article>
+      <article><small>03</small><h3>Подарки и HoReCa</h3><p>Фасованный продукт, согласованная тара или сезонная партия.</p><span>Форма · объём · упаковка</span></article>
+    </div>
+  </section>
+
+  <section class="join-buyer-cabinet">
+    <div class="container join-buyer-cabinet-grid">
+      <div class="buyer-cabinet-preview">
+        <span class="preview-label">Кабинет закупщика</span>
+        <h3>Все запросы — в одном месте</h3>
+        <div class="cabinet-request"><span class="status-new">Отправлена</span><div><b>Пасека «Белая река»</b><p>Башкирская липа · 200 кг</p></div><strong>Уфа →</strong></div>
+        <div class="cabinet-request"><span class="status-contacted">На связи</span><div><b>Бортники Нугуша</b><p>Лесное разнотравье · 120 кг</p></div><strong>Стерлитамак →</strong></div>
+        <div class="cabinet-favorites"><span>☆</span><div><b>Сохранённые хозяйства</b><p>Вернитесь к сравнению, когда появится следующая потребность.</p></div></div>
+      </div>
+      <div>
+        <span class="join-kicker">После регистрации</span>
+        <h2>Не теряйте найденных поставщиков и историю общения.</h2>
+        <p>В личном кабинете остаются избранные пасеки, отправленные запросы, объёмы, города доставки и текущие статусы.</p>
+        <a class="button button-primary button-large" href="/register?role=buyer">Создать кабинет закупщика <span>→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="join-faq-section">
+    <div class="container join-faq-grid">
+      <div><span class="join-kicker">Коротко о важном</span><h2>Вопросы закупщика</h2></div>
+      <div class="join-faq-list">
+        <details open><summary>Можно посмотреть каталог без регистрации?</summary><p>Да. Изучайте хозяйства, фильтруйте партии и сравнивайте условия свободно. Аккаунт нужен для избранного и отправки запросов.</p></details>
+        <details><summary>pchela.shop гарантирует качество партии?</summary><p>Платформа показывает заявленные поставщиком сведения, документы и статус проверки профиля. Перед закупкой согласуйте образец и проверьте документы на конкретную партию по вашим правилам.</p></details>
+        <details><summary>Где проходят оплата и доставка?</summary><p>Напрямую между вашей компанией и пасекой. pchela.shop не принимает оплату и не добавляет посредника в договорённость.</p></details>
+        <details><summary>Обязывает ли запрос совершить покупку?</summary><p>Нет. Запрос фиксирует интерес, нужный объём и город доставки. Финальная цена и условия появляются после ответа поставщика.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="join-final-cta retail-final-cta">
+    <div class="container">
+      <span class="join-kicker">Начните с каталога. Сохраните лучшее.</span>
+      <h2>Найдите пасеку под вашу следующую закупку.</h2>
+      <p>Каталог доступен сразу. Аккаунт закупщика откроет избранное и отправку запросов.</p>
+      <div class="join-actions join-actions-center">
+        <a class="button button-primary button-large" href="/register?role=buyer">Создать аккаунт <span>→</span></a>
+        <a class="button button-light button-large" href="/catalog">Сначала посмотреть каталог</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,119 @@
+<%- include('partials/head', {
+  title,
+  bodyClass: 'join-page join-supplier-page',
+  metaDescription: 'pchela.shop помогает пасекам показать хозяйство и партии мёда, получать заявки магазинов и вести их в одном кабинете.'
+}) %>
+<%- include('partials/header') %>
+
+<main>
+  <section class="join-hero">
+    <div class="container">
+      <nav class="join-role-tabs" aria-label="Выберите вашу роль">
+        <a class="active" href="/future_partner_join"><span>Я произвожу мёд</span><b>Для пасек</b></a>
+        <a href="/future_retail_join"><span>Я закупаю мёд</span><b>Для магазинов</b></a>
+      </nav>
+      <div class="join-hero-grid">
+        <div class="join-hero-copy">
+          <span class="join-kicker">Партнёрство с pchela.shop</span>
+          <h1>Ваш мёд должен продаваться по качеству, а не по числу знакомых.</h1>
+          <p>Создайте понятную страницу пасеки, покажите реальные партии и получайте предметные запросы от магазинов — с нужным объёмом и городом поставки.</p>
+          <div class="join-actions">
+            <a class="button button-primary button-large" href="/register?role=supplier">Создать страницу пасеки <span>→</span></a>
+            <a class="button button-outline-dark button-large" href="/suppliers/belaya-reka">Посмотреть пример</a>
+          </div>
+          <div class="join-trust"><span>Без комиссии на старте</span><span>Вы решаете, кому ответить</span><span>Прямой контакт</span></div>
+        </div>
+
+        <div class="join-showcase supplier-showcase" aria-label="Пример страницы пасеки">
+          <div class="showcase-browser"><i></i><i></i><i></i><span>pchela.shop/ваша-пасека</span></div>
+          <div class="showcase-cover"><span class="showcase-sun"></span><span class="showcase-hive">⬡</span></div>
+          <div class="showcase-body">
+            <div class="showcase-heading"><span class="showcase-logo">БР</span><div><small>Профиль проверен</small><h2>Пасека «Белая река»</h2><p>Башкортостан · 120 пчелосемей</p></div></div>
+            <div class="showcase-lot"><div><small>Свежая партия</small><b>Башкирская липа</b><span>1 350 кг в наличии</span></div><strong>610 ₽<small>/кг</small></strong></div>
+          </div>
+          <div class="showcase-alert"><span>↗</span><div><b>Новая заявка на 200 кг</b><small>Магазин · доставка в Уфу</small></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="join-proof-strip">
+    <div class="container">
+      <article><strong>0 ₽</strong><span>комиссии на старте</span></article>
+      <article><strong>1 кабинет</strong><span>профиль, партии и заявки</span></article>
+      <article><strong>Вы решаете</strong><span>цена, объём и условия поставки</span></article>
+      <article><strong>Прямо</strong><span>без посредника в сделке</span></article>
+    </div>
+  </section>
+
+  <section class="section join-problem-section">
+    <div class="container join-split-heading">
+      <div><span class="join-kicker">Зачем это пасеке</span><h2>Меньше объяснять заново.<br>Больше говорить о поставке.</h2></div>
+      <p>Покупателю не нужно собирать сведения по сообщениям и фотографиям. На одной странице он видит хозяйство, продукцию и условия — и приходит уже с конкретным запросом.</p>
+    </div>
+    <div class="container join-benefit-grid">
+      <article><span>01</span><div><h3>Страница хозяйства</h3><p>История пасеки, местоположение, опыт, число ульев, особенности производства и фотографии.</p></div></article>
+      <article><span>02</span><div><h3>Партии, которые есть сейчас</h3><p>Сорт, форма, урожай, доступный объём, минимальный заказ, цена, тара и примечание по качеству.</p></div></article>
+      <article><span>03</span><div><h3>Доверие до звонка</h3><p>Укажите паспорт пасеки, лабораторный анализ, условия доставки и другие подтверждения, которые у вас есть.</p></div></article>
+      <article><span>04</span><div><h3>Заявки по существу</h3><p>В заявке уже есть нужный объём, город доставки и комментарий закупщика. Статус меняется в кабинете.</p></div></article>
+    </div>
+  </section>
+
+  <section class="join-dark-section">
+    <div class="container">
+      <div class="join-split-heading join-split-light">
+        <div><span class="join-kicker">Как начать</span><h2>От регистрации до первой заявки — понятный маршрут.</h2></div>
+        <p>Не нужно внедрять CRM или переносить всю работу в новый сервис. pchela.shop становится вашей открытой витриной и точкой входа для закупщика.</p>
+      </div>
+      <ol class="join-steps">
+        <li><span>1</span><div><small>2 минуты</small><h3>Создайте аккаунт</h3><p>Имя, название хозяйства, ближайший город, email и пароль.</p></div></li>
+        <li><span>2</span><div><small>Один раз</small><h3>Расскажите о пасеке</h3><p>Заполните профиль, условия поставки и сведения о качестве.</p></div></li>
+        <li><span>3</span><div><small>По сезону</small><h3>Добавьте партии</h3><p>Публикуйте только то, что действительно готовы отгрузить.</p></div></li>
+        <li><span>4</span><div><small>В кабинете</small><h3>Отвечайте на запросы</h3><p>Связывайтесь с подходящими магазинами и договаривайтесь напрямую.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section join-checklist-section">
+    <div class="container join-checklist-grid">
+      <div>
+        <span class="join-kicker">Подготовка без бюрократии</span>
+        <h2>Что пригодится для сильной карточки</h2>
+        <p>Можно зарегистрироваться прямо сейчас, а сведения добавлять постепенно в личном кабинете.</p>
+        <a class="button button-dark button-large" href="/register?role=supplier">Начать регистрацию <span>→</span></a>
+      </div>
+      <ul class="join-checklist">
+        <li><span>✓</span><div><b>Короткое описание хозяйства</b><p>Где находится пасека, сколько лет работаете и чем отличается ваш мёд.</p></div></li>
+        <li><span>✓</span><div><b>Данные по текущим партиям</b><p>Сорт, остаток, минимальный объём, цена и доступная тара.</p></div></li>
+        <li><span>✓</span><div><b>Условия логистики</b><p>Самовывоз, собственная доставка или транспортная компания.</p></div></li>
+        <li><span>✓</span><div><b>Подтверждения качества</b><p>Паспорт пасеки, результаты анализа и другие документы — если они есть.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="join-faq-section">
+    <div class="container join-faq-grid">
+      <div><span class="join-kicker">Коротко о важном</span><h2>Вопросы пасечника</h2></div>
+      <div class="join-faq-list">
+        <details open><summary>pchela.shop забирает комиссию с продажи?</summary><p>На старте размещение и получение заявок работают без комиссии. Условия сервиса всегда будут показаны до подключения платных возможностей.</p></details>
+        <details><summary>Кто устанавливает цену и минимальный заказ?</summary><p>Вы. В кабинете можно указать цену за килограмм, доступный остаток и минимальный объём для каждой партии.</p></details>
+        <details><summary>Сервис принимает оплату от магазина?</summary><p>Нет. Сейчас pchela.shop помогает сторонам найти друг друга и обменяться предметной заявкой. Финальные условия, документы, оплату и доставку вы согласуете напрямую.</p></details>
+        <details><summary>Что будет после регистрации?</summary><p>Сразу откроется кабинет поставщика. Вы заполните карточку пасеки и добавите партии; перед появлением в публичном каталоге профиль проверит команда платформы.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="join-final-cta supplier-final-cta">
+    <div class="container">
+      <span class="join-kicker">Пасека уже работает. Покажем её покупателям.</span>
+      <h2>Создайте страницу хозяйства сегодня.</h2>
+      <p>Регистрация займёт несколько минут. Профиль и партии можно заполнить в удобном темпе.</p>
+      <div class="join-actions join-actions-center">
+        <a class="button button-primary button-large" href="/register?role=supplier">Зарегистрировать пасеку <span>→</span></a>
+        <a class="button button-light button-large" href="/future_retail_join">Я представляю магазин</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>
