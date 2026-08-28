@@ -1,0 +1,36 @@
+<header class="site-header" data-header>
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="Мёдограм — на главную">
+      <img src="/assets/logo.svg" width="42" height="42" alt="">
+      <span class="brand-copy"><b>мёдо</b><i>.gram</i></span>
+    </a>
+    <button class="menu-button" type="button" aria-label="Открыть меню" aria-expanded="false" data-menu-button>
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="main-nav" data-menu>
+      <a class="<%= activePath === '/catalog' ? 'active' : '' %>" href="/catalog">Каталог пасек</a>
+      <a href="/#quality">Как проверяем</a>
+      <a href="/#suppliers">Для пчеловодов</a>
+      <% if (currentUser) { %>
+        <a class="nav-account" href="/dashboard">
+          <span class="avatar"><%= currentUser.display_name.slice(0, 1).toUpperCase() %></span>
+          Кабинет
+        </a>
+        <form method="post" action="/logout" class="nav-logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="link-button">Выйти</button>
+        </form>
+      <% } else { %>
+        <a href="/login">Войти</a>
+        <a class="button button-small button-dark" href="/register">Разместить пасеку</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<% if (notice) { %>
+  <div class="container notice-wrap">
+    <div class="notice notice-<%= noticeType %>" role="status">
+      <span><%= noticeType === 'error' ? '!' : '✓' %></span><%= notice %>
+    </div>
+  </div>
+<% } %>

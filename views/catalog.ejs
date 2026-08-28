@@ -1,0 +1,42 @@
+<%- include('partials/head', { title, bodyClass: 'catalog-page' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="page-hero compact-hero">
+    <div class="container catalog-title-row">
+      <div><span class="section-kicker">Прямые поставки</span><h1>Каталог пасек</h1><p>Сравните происхождение, расстояние и условия партии.</p></div>
+      <div class="catalog-count"><strong><%= items.length %></strong><span>подходящих<br>поставщика</span></div>
+    </div>
+  </section>
+  <section class="catalog-layout container">
+    <button class="filter-mobile-button button button-dark" type="button" data-filter-button>Настроить фильтры</button>
+    <aside class="catalog-filters" data-filter-panel>
+      <form action="/catalog" method="get">
+        <div class="filter-heading"><h2>Фильтры</h2><a href="/catalog">Сбросить</a></div>
+        <label class="field"><span>Поиск</span><input name="q" value="<%= filters.q || '' %>" placeholder="Сорт, пасека, город"></label>
+        <label class="field"><span>Считать расстояние от</span><select name="from"><option value="">Не выбрано</option><% cities.forEach((city) => { %><option value="<%= city.code %>" <%= filters.from === city.code ? 'selected' : '' %>><%= city.name %></option><% }) %></select></label>
+        <label class="field"><span>Радиус</span><select name="radius"><option value="">Любой</option><option value="100" <%= filters.radius === '100' ? 'selected' : '' %>>до 100 км</option><option value="300" <%= filters.radius === '300' ? 'selected' : '' %>>до 300 км</option><option value="600" <%= filters.radius === '600' ? 'selected' : '' %>>до 600 км</option><option value="1200" <%= filters.radius === '1200' ? 'selected' : '' %>>до 1 200 км</option></select></label>
+        <label class="field"><span>Сорт</span><select name="variety"><option value="">Любой</option><% varieties.forEach((value) => { %><option value="<%= value %>" <%= filters.variety === value ? 'selected' : '' %>><%= value %></option><% }) %></select></label>
+        <label class="field"><span>Формат</span><select name="form"><option value="">Любой</option><% forms.forEach((value) => { %><option value="<%= value %>" <%= filters.form === value ? 'selected' : '' %>><%= value %></option><% }) %></select></label>
+        <div class="filter-two"><label class="field"><span>Цена до, ₽/кг</span><input type="number" name="max_price" min="1" value="<%= filters.max_price || '' %>" placeholder="800"></label><label class="field"><span>Объём от, кг</span><input type="number" name="min_stock" min="1" value="<%= filters.min_stock || '' %>" placeholder="100"></label></div>
+        <label class="check-field"><input type="checkbox" name="verified" value="1" <%= filters.verified === '1' ? 'checked' : '' %>><span class="fake-check">✓</span><span>Проверенный профиль</span></label>
+        <label class="check-field"><input type="checkbox" name="lab" value="1" <%= filters.lab === '1' ? 'checked' : '' %>><span class="fake-check">✓</span><span>Есть лабораторный анализ</span></label>
+        <button class="button button-primary filter-submit" type="submit">Показать <%= items.length %></button>
+      </form>
+    </aside>
+    <div class="catalog-results">
+      <div class="results-toolbar">
+        <p><b><%= items.length %></b> предложений</p>
+        <form action="/catalog" method="get" class="sort-form">
+          <% Object.entries(filters).forEach(([key, value]) => { if (key !== 'sort' && typeof value === 'string') { %><input type="hidden" name="<%= key %>" value="<%= value %>"><% } }) %>
+          <label>Сначала <select name="sort" data-auto-submit><option value="" <%= !filters.sort ? 'selected' : '' %>>рекомендуемые</option><option value="distance" <%= filters.sort === 'distance' ? 'selected' : '' %>>ближайшие</option><option value="price" <%= filters.sort === 'price' ? 'selected' : '' %>>дешевле</option><option value="stock" <%= filters.sort === 'stock' ? 'selected' : '' %>>больше объёма</option></select></label>
+        </form>
+      </div>
+      <% if (items.length) { %>
+        <div class="apiary-grid catalog-grid"><% items.forEach((item) => { %><%- include('partials/apiary-card', { item }) %><% }) %></div>
+      <% } else { %>
+        <div class="empty-state"><span>⬡</span><h2>Пока ничего не совпало</h2><p>Расширьте радиус или уберите один из фильтров.</p><a class="button button-dark" href="/catalog">Сбросить фильтры</a></div>
+      <% } %>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>

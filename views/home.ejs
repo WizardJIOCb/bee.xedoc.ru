@@ -1,0 +1,137 @@
+<%- include('partials/head', { title, bodyClass: 'home-page', metaDescription: 'Мёдограм связывает пасеки и магазины: прямые поставки, свежие партии, понятное происхождение и условия закупки.' }) %>
+<%- include('partials/header') %>
+
+<main>
+  <section class="hero">
+    <div class="hero-honeycomb" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="pulse-dot"></span> Сезон 2026 · свежие партии появляются сейчас</div>
+        <h1>Мёд, которому<br><em>есть откуда взяться.</em></h1>
+        <p class="hero-lead">Магазины находят надёжные пасеки рядом. Пчеловоды продают урожай без лишней цепочки посредников.</p>
+        <div class="hero-actions">
+          <a class="button button-primary button-large" href="/catalog">Найти поставщика <span>→</span></a>
+          <a class="button button-ghost button-large" href="/register?role=supplier">Предложить свой мёд</a>
+        </div>
+        <div class="hero-trust">
+          <div class="trust-avatars"><span>БР</span><span>БН</span><span>ТМ</span></div>
+          <p><b>Первые хозяйства уже в каталоге</b><br>Проверяем происхождение, объём и документы</p>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="Свежий мёд от пасек">
+        <div class="visual-label label-top"><span>●</span> Свежая качка</div>
+        <div class="visual-label label-bottom"><b>01</b><span>пасека<br>одна партия</span></div>
+        <div class="jar-shadow"></div>
+        <div class="honey-jar">
+          <div class="jar-lid"></div>
+          <div class="jar-glass"></div>
+          <div class="jar-honey"></div>
+          <div class="jar-label"><img src="/assets/bee-mark.svg" alt=""><b>мёдо</b><span>разнотравье · 2026</span></div>
+          <div class="honey-glow"></div>
+        </div>
+        <div class="flower flower-one">✣</div><div class="flower flower-two">✣</div><div class="bee bee-one">◆</div>
+      </div>
+    </div>
+    <div class="container hero-search-wrap">
+      <form class="hero-search" action="/catalog" method="get">
+        <div class="search-field">
+          <label for="from">Откуда ищем</label>
+          <select id="from" name="from">
+            <% cities.forEach((city) => { %><option value="<%= city.code %>" <%= city.code === 'ufa' ? 'selected' : '' %>><%= city.name %></option><% }) %>
+          </select>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field">
+          <label for="radius">Удалённость</label>
+          <select id="radius" name="radius">
+            <option value="150">до 150 км</option>
+            <option value="300" selected>до 300 км</option>
+            <option value="600">до 600 км</option>
+            <option value="">не важно</option>
+          </select>
+        </div>
+        <div class="search-divider"></div>
+        <div class="search-field search-wide">
+          <label for="q">Что нужно</label>
+          <input id="q" name="q" placeholder="Например, липовый или рамка">
+        </div>
+        <button class="search-submit" type="submit" aria-label="Найти пасеки">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <span>Найти</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <section class="section proof-strip">
+    <div class="container proof-grid">
+      <div><strong><%= stats.apiaries %></strong><span>пасеки в первом наборе</span></div>
+      <div><strong><%= number(stats.stock) %> кг</strong><span>доступно в демо-каталоге</span></div>
+      <div><strong>1→1</strong><span>прямой контакт с хозяйством</span></div>
+      <div><strong>до партии</strong><span>документы и условия закупки</span></div>
+    </div>
+  </section>
+
+  <section class="section featured-section">
+    <div class="container">
+      <div class="section-heading split-heading">
+        <div><span class="section-kicker">Пасеки рядом</span><h2>Выбирайте не банку.<br>Выбирайте производителя.</h2></div>
+        <a class="text-link" href="/catalog">Весь каталог <span>→</span></a>
+      </div>
+      <div class="apiary-grid">
+        <% featured.forEach((item) => { %><%- include('partials/apiary-card', { item }) %><% }) %>
+      </div>
+      <p class="demo-disclaimer">Карточки в первом каталоге — демонстрационные примеры. Реальные хозяйства смогут зарегистрироваться и заменить их своими предложениями.</p>
+    </div>
+  </section>
+
+  <section class="section quality-section" id="quality">
+    <div class="container quality-grid">
+      <div class="quality-intro">
+        <span class="section-kicker">Не на слово</span>
+        <h2>Качество видно<br>ещё до закупки.</h2>
+        <p>Не обещаем магический «лучший мёд». Собираем конкретные признаки, по которым закупщик принимает решение.</p>
+        <a class="button button-dark" href="/catalog?verified=1">Смотреть проверенные профили</a>
+      </div>
+      <div class="quality-steps">
+        <article><span class="step-index">01</span><div><h3>Происхождение партии</h3><p>Пасека, точок, сезон, сорт и объём не смешиваются в одно абстрактное предложение.</p></div><span class="step-icon">⌖</span></article>
+        <article><span class="step-index">02</span><div><h3>Документы и образец</h3><p>В карточке видно, есть ли паспорт пасеки, лабораторный протокол и образец партии.</p></div><span class="step-icon">≣</span></article>
+        <article><span class="step-index">03</span><div><h3>Запечатанная рамка</h3><p>Можно договориться о приёмке до распечатки рамки — когда происхождение продукта легче проверить.</p></div><span class="step-icon">⬡</span></article>
+        <article id="beeos"><span class="step-index">04</span><div><h3>Данные хозяйства · скоро</h3><p>Связка с BeeOS позволит сопоставлять урожай с количеством ульев, осмотрами и весом.</p></div><span class="step-icon">⌁</span></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section roles-section">
+    <div class="container">
+      <div class="role-panels">
+        <article class="role-panel buyer-panel">
+          <div class="role-number">для магазина</div>
+          <h2>Закупайте понятнее.</h2>
+          <p>Сравнивайте пасеки по расстоянию, цене, объёму, формату поставки и признакам качества. Отправляйте одну конкретную заявку вместо десятка звонков.</p>
+          <ul><li>Фильтры под условия закупки</li><li>Избранные поставщики</li><li>История заявок в кабинете</li></ul>
+          <a class="button button-light" href="/register?role=buyer">Создать аккаунт закупщика <span>→</span></a>
+        </article>
+        <article class="role-panel supplier-panel" id="suppliers">
+          <div class="role-number">для пасеки</div>
+          <h2>Продавайте свой,<br>а не «просто мёд».</h2>
+          <p>Соберите страницу хозяйства, добавьте доступные партии и получите заявки от магазинов, которым подходят именно ваши условия.</p>
+          <ul><li>Страница пасеки за 10 минут</li><li>Партии, цены и минимальный заказ</li><li>Входящие заявки без комиссии на старте</li></ul>
+          <a class="button button-dark" href="/register?role=supplier">Разместить пасеку <span>→</span></a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section final-cta">
+    <div class="container final-cta-inner">
+      <div class="cta-bee" aria-hidden="true">⬡</div>
+      <span class="section-kicker">Урожай уже собирают</span>
+      <h2>Не пропустите<br>свою партию.</h2>
+      <p>Сезон короткий. Начните с каталога — дальше договоритесь напрямую.</p>
+      <div class="hero-actions"><a class="button button-dark button-large" href="/catalog">Найти мёд</a><a class="button button-outline-dark button-large" href="/register?role=supplier">Предложить мёд</a></div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

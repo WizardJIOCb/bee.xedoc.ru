@@ -1,0 +1,4 @@
+<%- include('partials/head', { title, bodyClass: 'error-page' }) %>
+<%- include('partials/header') %>
+<main class="error-main"><div class="container error-card"><span class="error-hex">⬡</span><strong><%= status %></strong><h1><%= title %></h1><p><%= message %></p><a class="button button-dark" href="/">На главную</a></div></main>
+<%- include('partials/footer') %>

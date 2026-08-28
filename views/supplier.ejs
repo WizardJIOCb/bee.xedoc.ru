@@ -1,0 +1,61 @@
+<%- include('partials/head', { title, bodyClass: 'supplier-page', metaDescription: `${apiary.name}: партии мёда, условия поставки и данные хозяйства.` }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="supplier-cover accent-<%= apiary.accent %>">
+    <div class="supplier-landscape"><span class="cover-sun"></span><span class="cover-hills hill-one"></span><span class="cover-hills hill-two"></span><span class="big-hive">⬡</span></div>
+    <div class="container supplier-cover-content">
+      <a class="back-link" href="/catalog">← К каталогу</a>
+      <% if (apiary.is_demo) { %><span class="demo-label">демонстрационный пример</span><% } %>
+    </div>
+  </section>
+  <section class="supplier-main container">
+    <div class="supplier-content">
+      <div class="supplier-heading">
+        <div class="supplier-logo"><%= String(apiary.name).slice(0, 2).toUpperCase() %></div>
+        <div><div class="badges"><% if (apiary.verified) { %><span class="badge badge-green">✓ профиль проверен</span><% } %><% if (apiary.lab_verified) { %><span class="badge">есть анализ</span><% } %></div><h1><%= apiary.name %></h1><p class="supplier-location">⌖ <%= city?.name || 'Локация уточняется' %>, <%= apiary.location_detail %></p></div>
+      </div>
+      <p class="supplier-story"><%= apiary.story %></p>
+      <div class="supplier-facts">
+        <div><small>Опыт</small><strong><%= apiary.years_experience || '—' %><% if (apiary.years_experience) { %> лет<% } %></strong></div>
+        <div><small>Пчелосемей</small><strong><%= apiary.hives_count || '—' %></strong></div>
+        <div><small>Формат</small><strong><%= apiary.production_type %></strong></div>
+      </div>
+      <div class="profile-section-heading"><div><span class="section-kicker">Доступно сейчас</span><h2>Партии урожая</h2></div><span><%= lots.length %> предложения</span></div>
+      <div class="lot-list">
+        <% lots.forEach((lot) => { %>
+          <article class="lot-card">
+            <div class="lot-main"><span class="lot-form"><%= lot.form %></span><h3><%= lot.variety %></h3><p><%= lot.quality_note || 'Подробности партии — по запросу' %></p><div class="lot-tags"><span>Урожай <%= lot.harvest_year %></span><span><%= lot.packaging || 'Тара обсуждается' %></span></div></div>
+            <div class="lot-numbers"><div><small>В наличии</small><strong><%= number(lot.stock_kg) %> кг</strong></div><div><small>Мин. заказ</small><strong><%= number(lot.min_order_kg) %> кг</strong></div><div class="lot-price"><small>Цена</small><strong><%= money(lot.price_per_kg) %><em>/кг</em></strong></div><a class="button button-dark" href="#request" data-lot-choice="<%= lot.id %>">Запросить партию</a></div>
+          </article>
+        <% }) %>
+      </div>
+      <div class="supplier-details">
+        <article><span>↗</span><div><h3>Доставка</h3><p><%= apiary.delivery || 'Условия согласовываются с поставщиком.' %></p></div></article>
+        <article><span>≣</span><div><h3>Документы</h3><p><%= apiary.certifications || 'Состав документов уточняется для конкретной партии.' %></p></div></article>
+        <article><span>⬡</span><div><h3>Запечатанные рамки</h3><p><%= apiary.frame_available ? 'Есть возможность обсудить приёмку мёда в запечатанной рамке.' : 'Сейчас поставщик предлагает мёд после качки.' %></p></div></article>
+      </div>
+    </div>
+    <aside class="request-card" id="request">
+      <% if (currentUser?.role === 'buyer') { %>
+        <div class="request-card-head"><span class="pulse-dot"></span><b>Поставщик принимает заявки</b></div>
+        <h2>Обсудить поставку</h2><p>Укажите задачу — заявка появится у пасеки в кабинете.</p>
+        <form method="post" action="/inquiries">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="apiary_id" value="<%= apiary.id %>">
+          <label class="field"><span>Партия</span><select name="lot_id" data-lot-select><option value="0">Любая подходящая</option><% lots.forEach((lot) => { %><option value="<%= lot.id %>"><%= lot.variety %> · <%= money(lot.price_per_kg) %>/кг</option><% }) %></select></label>
+          <div class="filter-two"><label class="field"><span>Объём, кг</span><input name="volume_kg" type="number" min="1" required placeholder="300"></label><label class="field"><span>Город доставки</span><input name="delivery_city" required value="<%= cityMap.get(currentUser.city_code)?.name || '' %>" placeholder="Уфа"></label></div>
+          <label class="field"><span>Комментарий</span><textarea name="message" rows="4" placeholder="Тара, график, документы…"></textarea></label>
+          <button class="button button-primary button-block" type="submit">Отправить заявку <span>→</span></button>
+        </form>
+        <form method="post" action="/favorites/<%= apiary.id %>" class="favorite-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button type="submit" class="button button-outline-dark button-block"><%= favorited ? '★ В избранном' : '☆ Добавить в избранное' %></button></form>
+      <% } else if (currentUser?.role === 'supplier') { %>
+        <h2>Вы вошли как поставщик</h2><p>Чтобы отправлять заявки другим пасекам, нужен отдельный аккаунт закупщика.</p><a class="button button-dark button-block" href="/dashboard">В свой кабинет</a>
+      <% } else { %>
+        <div class="request-card-head"><span class="pulse-dot"></span><b>Поставщик принимает заявки</b></div>
+        <h2>Заинтересовала пасека?</h2><p>Войдите как закупщик — сможете указать объём и получить ответ поставщика.</p><a class="button button-primary button-block" href="/login?next=/suppliers/<%= apiary.slug %>">Войти и отправить заявку</a><a class="button button-outline-dark button-block" href="/register?role=buyer&next=/suppliers/<%= apiary.slug %>">Создать аккаунт</a>
+      <% } %>
+      <small class="privacy-note">Контактные данные не публикуются открыто. Стороны видят их после заявки.</small>
+    </aside>
+  </section>
+  <% if (apiary.is_demo) { %><section class="container demo-banner"><b>Это пример будущей карточки</b><p>Название, объёмы и условия используются для демонстрации интерфейса и не являются публичной офертой реального хозяйства.</p></section><% } %>
+</main>
+<%- include('partials/footer') %>

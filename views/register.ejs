@@ -1,0 +1,30 @@
+<%- include('partials/head', { title, bodyClass: 'auth-page register-page' }) %>
+<%- include('partials/header') %>
+<main class="auth-main">
+  <section class="auth-shell container">
+    <div class="auth-aside">
+      <span class="section-kicker">Первый шаг</span><h1><%= role === 'supplier' ? 'Покажите свой мёд тем, кто его ищет.' : 'Найдите поставщика под свои условия.' %></h1>
+      <p><%= role === 'supplier' ? 'Карточка хозяйства, партии и заявки от закупщиков. На старте — без комиссии.' : 'Расстояние, цены, объём и документы видны до первого разговора.' %></p>
+      <ol class="mini-steps"><li><span>1</span>Создайте аккаунт</li><li><span>2</span><%= role === 'supplier' ? 'Заполните страницу пасеки' : 'Настройте условия поиска' %></li><li><span>3</span><%= role === 'supplier' ? 'Получайте заявки' : 'Отправьте запрос хозяйству' %></li></ol>
+    </div>
+    <div class="auth-card register-card">
+      <h2>Создать аккаунт</h2>
+      <div class="role-switch" data-role-switch>
+        <a href="/register?role=supplier" class="<%= role === 'supplier' ? 'active' : '' %>">Продаю мёд</a>
+        <a href="/register?role=buyer" class="<%= role === 'buyer' ? 'active' : '' %>">Закупаю мёд</a>
+      </div>
+      <% if (error) { %><div class="form-error"><span>!</span><%= error %></div><% } %>
+      <form method="post" action="/register">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="role" value="<%= role %>"><input type="hidden" name="next" value="<%= next %>">
+        <div class="filter-two"><label class="field"><span>Ваше имя</span><input name="display_name" value="<%= values.display_name || '' %>" required placeholder="Родион"></label><label class="field"><span><%= role === 'supplier' ? 'Название хозяйства' : 'Компания / магазин' %></span><input name="company_name" value="<%= values.company_name || '' %>" placeholder="<%= role === 'supplier' ? 'Пасека Белая река' : 'Лавка у дома' %>"></label></div>
+        <label class="field"><span>Ближайший город</span><select name="city_code" required><option value="">Выберите город</option><% cities.forEach((city) => { %><option value="<%= city.code %>" <%= values.city_code === city.code ? 'selected' : '' %>><%= city.name %> · <%= city.region %></option><% }) %></select></label>
+        <label class="field"><span>Email</span><input type="email" name="email" value="<%= values.email || '' %>" autocomplete="email" required placeholder="you@company.ru"></label>
+        <label class="field"><span>Пароль</span><input type="password" name="password" autocomplete="new-password" minlength="8" required placeholder="Не короче 8 символов"></label>
+        <button class="button button-primary button-block button-large" type="submit"><%= role === 'supplier' ? 'Создать страницу пасеки' : 'Начать поиск' %> <span>→</span></button>
+        <p class="form-terms">Нажимая кнопку, вы соглашаетесь использовать платформу добросовестно и указывать реальные данные.</p>
+      </form>
+      <div class="auth-switch"><span>Уже есть аккаунт?</span><a href="/login">Войти</a></div>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>

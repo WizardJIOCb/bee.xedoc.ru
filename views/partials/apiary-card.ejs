@@ -1,0 +1,27 @@
+<article class="apiary-card accent-<%= item.accent %>">
+  <a class="apiary-card-cover" href="/suppliers/<%= item.slug %>" aria-label="Открыть карточку <%= item.name %>">
+    <span class="cover-sun"></span>
+    <span class="cover-hills hill-one"></span>
+    <span class="cover-hills hill-two"></span>
+    <span class="cover-hive">⬡</span>
+    <% if (item.is_demo) { %><span class="demo-label">пример карточки</span><% } %>
+  </a>
+  <div class="apiary-card-body">
+    <div class="card-location">
+      <span><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 21s7-6.1 7-13a7 7 0 1 0-14 0c0 6.9 7 13 7 13Z"/><circle cx="12" cy="8" r="2.5"/></svg><%= item.cityName %></span>
+      <% if (item.distance !== null && item.distance !== undefined) { %><b><%= item.distance %> км</b><% } %>
+    </div>
+    <h3><a href="/suppliers/<%= item.slug %>"><%= item.name %></a></h3>
+    <p class="card-story"><%= item.story %></p>
+    <div class="badges">
+      <% if (item.verified) { %><span class="badge badge-green">✓ профиль проверен</span><% } %>
+      <% if (item.lab_verified) { %><span class="badge">анализ партии</span><% } %>
+      <% if (item.frame_available) { %><span class="badge">рамки</span><% } %>
+    </div>
+    <div class="card-metrics">
+      <div><small>В наличии</small><strong><%= number(item.stock_kg) %> кг</strong></div>
+      <div><small>Цена от</small><strong><%= item.min_price ? money(item.min_price) : 'по запросу' %><% if (item.min_price) { %><em>/ кг</em><% } %></strong></div>
+    </div>
+    <a class="card-link" href="/suppliers/<%= item.slug %>">Смотреть партии <span>→</span></a>
+  </div>
+</article>

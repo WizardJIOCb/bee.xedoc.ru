@@ -1,0 +1,23 @@
+<%- include('partials/head', { title, bodyClass: 'auth-page' }) %>
+<%- include('partials/header') %>
+<main class="auth-main">
+  <section class="auth-shell container">
+    <div class="auth-aside">
+      <span class="section-kicker">С возвращением</span><h1>Продолжим<br>прямой разговор.</h1>
+      <p>Все заявки, партии и избранные хозяйства — в одном кабинете.</p>
+      <div class="auth-quote"><span>“</span><p>Покупателю важно понимать не только цену, но и откуда взялась каждая партия.</p></div>
+    </div>
+    <div class="auth-card">
+      <h2>Войти в Мёдограм</h2><p>Используйте email, с которым регистрировались.</p>
+      <% if (error) { %><div class="form-error"><span>!</span><%= error %></div><% } %>
+      <form method="post" action="/login">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="next" value="<%= next %>">
+        <label class="field"><span>Email</span><input type="email" name="email" value="<%= email %>" autocomplete="email" required placeholder="you@company.ru"></label>
+        <label class="field"><span>Пароль</span><input type="password" name="password" autocomplete="current-password" required placeholder="Не короче 8 символов"></label>
+        <button class="button button-primary button-block button-large" type="submit">Войти <span>→</span></button>
+      </form>
+      <div class="auth-switch"><span>Ещё нет аккаунта?</span><a href="/register">Создать бесплатно</a></div>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>
