@@ -51,7 +51,7 @@
         <h2>Вы вошли как поставщик</h2><p>Чтобы отправлять заявки другим пасекам, нужен отдельный аккаунт закупщика.</p><a class="button button-dark button-block" href="/dashboard">В свой кабинет</a>
       <% } else { %>
         <div class="request-card-head"><span class="pulse-dot"></span><b>Поставщик принимает заявки</b></div>
-        <h2>Заинтересовала пасека?</h2><p>Войдите как закупщик — сможете указать объём и получить ответ поставщика.</p><a class="button button-primary button-block" href="/login?next=/suppliers/<%= apiary.slug %>">Войти и отправить заявку</a><a class="button button-outline-dark button-block" href="/register?role=buyer&next=/suppliers/<%= apiary.slug %>">Создать аккаунт</a>
+        <h2>Заинтересовала пасека?</h2><p>Войдите как закупщик — сможете указать объём и получить ответ поставщика.</p><div class="request-card-actions"><a class="button button-primary button-block" href="/login?next=/suppliers/<%= apiary.slug %>">Войти и отправить заявку</a><a class="button button-outline-dark button-block" href="/register?role=buyer&next=/suppliers/<%= apiary.slug %>">Создать аккаунт</a></div>
       <% } %>
       <small class="privacy-note">Контактные данные не публикуются открыто. Стороны видят их после заявки.</small>
     </aside>

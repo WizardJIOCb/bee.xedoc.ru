@@ -295,6 +295,7 @@ img, svg { display: block; }
 .request-card > p { margin: 0 0 23px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .request-card .field { margin-bottom: 14px; }
 .request-card .filter-two { grid-template-columns: .7fr 1.3fr; }
+.request-card-actions { display: grid; gap: 10px; }
 .favorite-form { margin-top: 9px; }
 .privacy-note { display: block; margin-top: 17px; color: #8b918b; font-size: 10px; line-height: 1.45; text-align: center; }
 .demo-banner { margin-bottom: 80px; padding: 20px 25px; border: 1px solid #d7b968; border-radius: 16px; background: #fff2c4; }
