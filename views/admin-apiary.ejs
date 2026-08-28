@@ -1,0 +1,28 @@
+<%- include('partials/head', { title, bodyClass: 'admin-page dashboard-page' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="admin-hero admin-edit-hero">
+    <div class="container admin-hero-row"><div><a class="back-link admin-back" href="/admin#apiaries">← Ко всем пасекам</a><span class="section-kicker">Редактирование карточки</span><h1><%= apiary.name %></h1><p>Владелец: <%= apiary.owner_name %> · <%= apiary.owner_email %></p></div><% if (apiary.published) { %><a class="button button-primary" href="/suppliers/<%= apiary.slug %>">Открыть на сайте ↗</a><% } %></div>
+  </section>
+  <section class="container admin-edit-layout">
+    <form method="post" action="/admin/apiaries/<%= apiary.id %>" class="dashboard-card profile-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="dashboard-card-heading"><div><span class="section-kicker">Профиль хозяйства</span><h2>Данные и публикация</h2></div><span>id <%= apiary.id %></span></div>
+      <% if (apiary.cover_image) { %><img class="admin-cover-preview" src="<%= apiary.cover_image %>" alt="Обложка <%= apiary.name %>"><% } %>
+      <div class="filter-two"><label class="field"><span>Название</span><input name="name" value="<%= apiary.name %>" required></label><label class="field"><span>Тип хозяйства</span><select name="production_type"><% ['Семейная пасека','Семейная кочевая пасека','Стационарная лесная пасека','Фермерское хозяйство','Производство и фасовка'].forEach(value => { %><option value="<%= value %>" <%= apiary.production_type === value ? 'selected' : '' %>><%= value %></option><% }) %></select></label></div>
+      <label class="field"><span>История хозяйства</span><textarea name="story" rows="6" maxlength="1800"><%= apiary.story %></textarea></label>
+      <label class="field"><span>Обложка</span><select name="cover_image"><% coverChoices.forEach(choice => { %><option value="<%= choice.value %>" <%= apiary.cover_image === choice.value ? 'selected' : '' %>><%= choice.label %></option><% }) %></select></label>
+      <div class="form-grid-three"><label class="field"><span>Ближайший город</span><select name="city_code" required><% cities.forEach(city => { %><option value="<%= city.code %>" <%= apiary.city_code === city.code ? 'selected' : '' %>><%= city.name %></option><% }) %></select></label><label class="field"><span>Локация</span><input name="location_detail" value="<%= apiary.location_detail %>"></label><label class="field"><span>Лет опыта</span><input type="number" name="years_experience" min="0" max="100" value="<%= apiary.years_experience %>"></label></div>
+      <div class="form-grid-three"><label class="field"><span>Пчелосемей</span><input type="number" name="hives_count" min="0" value="<%= apiary.hives_count %>"></label><label class="field span-two"><span>Доставка</span><input name="delivery" value="<%= apiary.delivery %>"></label></div>
+      <label class="field"><span>Документы</span><input name="certifications" value="<%= apiary.certifications %>"></label>
+      <div class="checks-row"><label class="check-field"><input type="checkbox" name="lab_verified" value="1" <%= apiary.lab_verified ? 'checked' : '' %>><span class="fake-check">✓</span><span>Есть лабораторный анализ</span></label><label class="check-field"><input type="checkbox" name="frame_available" value="1" <%= apiary.frame_available ? 'checked' : '' %>><span class="fake-check">✓</span><span>Доступны запечатанные рамки</span></label><label class="check-field"><input type="checkbox" name="verified" value="1" <%= apiary.verified ? 'checked' : '' %>><span class="fake-check">✓</span><span>Профиль проверен</span></label></div>
+      <div class="publish-row"><label class="switch-field"><input type="checkbox" name="published" value="1" <%= apiary.published ? 'checked' : '' %>><span class="switch"></span><span><b>Показывать в каталоге</b><small>Карточка и доступные партии станут публичными</small></span></label><button class="button button-dark" type="submit">Сохранить карточку</button></div>
+    </form>
+
+    <section class="dashboard-card" id="lots">
+      <div class="dashboard-card-heading"><div><span class="section-kicker">Предложения</span><h2>Партии хозяйства</h2></div><span><%= lots.length %> всего</span></div>
+      <% if (lots.length) { %><div class="dashboard-lots"><% lots.forEach(lot => { %><article class="dashboard-lot <%= lot.available ? '' : 'muted' %>"><div><span class="lot-form"><%= lot.form %></span><h3><%= lot.variety %></h3><p><%= lot.harvest_year %> · <%= lot.packaging || 'тара обсуждается' %></p></div><div><small>Остаток</small><strong><%= number(lot.stock_kg) %> кг</strong></div><div><small>Цена</small><strong><%= money(lot.price_per_kg) %>/кг</strong></div><form method="post" action="/admin/lots/<%= lot.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="mini-action <%= lot.available ? '' : 'positive' %>" type="submit"><%= lot.available ? 'Скрыть' : 'Вернуть' %></button></form></article><% }) %></div><% } else { %><div class="empty-inline"><span>⬡</span><div><h3>У хозяйства нет партий</h3><p>Поставщик сможет добавить первую партию в своём кабинете.</p></div></div><% } %>
+    </section>
+  </section>
+</main>
+<%- include('partials/footer') %>

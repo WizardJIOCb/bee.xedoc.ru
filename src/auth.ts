@@ -9,6 +9,7 @@ export type CurrentUser = {
   display_name: string;
   company_name: string;
   city_code: string;
+  is_admin: number;
 };
 
 export function hashPassword(password: string): string {
@@ -50,7 +51,7 @@ export function getCurrentUser(db: DatabaseSync, request: Request): CurrentUser 
   const token = parseCookies(request.headers.cookie).bee_session;
   if (!token) return null;
   const row = db.prepare(`
-    SELECT u.id, u.email, u.role, u.display_name, u.company_name, u.city_code
+    SELECT u.id, u.email, u.role, u.display_name, u.company_name, u.city_code, u.is_admin
     FROM sessions s
     JOIN users u ON u.id = s.user_id
     WHERE s.id = ? AND s.expires_at > datetime('now') AND u.disabled = 0

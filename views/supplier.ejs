@@ -2,6 +2,7 @@
 <%- include('partials/header') %>
 <main>
   <section class="supplier-cover accent-<%= apiary.accent %>">
+    <% if (apiary.cover_image) { %><img class="supplier-cover-photo" src="<%= apiary.cover_image %>" alt="Пасека <%= apiary.name %>"><span class="supplier-photo-shade"></span><% } %>
     <div class="supplier-landscape"><span class="cover-sun"></span><span class="cover-hills hill-one"></span><span class="cover-hills hill-two"></span><span class="big-hive">⬡</span></div>
     <div class="container supplier-cover-content">
       <a class="back-link" href="/catalog">← К каталогу</a>

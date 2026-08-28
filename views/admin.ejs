@@ -1,0 +1,93 @@
+<%- include('partials/head', { title, bodyClass: 'admin-page dashboard-page' }) %>
+<%- include('partials/header') %>
+<main>
+  <section class="admin-hero">
+    <div class="container admin-hero-row">
+      <div><span class="section-kicker">Управление платформой</span><h1>Пульс pchela.shop</h1><p>Партнёры, пасеки, партии и заявки — в одном рабочем пространстве.</p></div>
+      <div class="admin-identity"><span class="avatar"><%= currentUser.display_name.slice(0, 1) %></span><div><small>Администратор</small><strong><%= currentUser.email %></strong></div></div>
+    </div>
+  </section>
+
+  <section class="container admin-layout">
+    <nav class="dashboard-nav admin-nav">
+      <a href="#overview">Обзор</a>
+      <a href="#analytics">Аналитика</a>
+      <a href="#users">Пользователи <b><%= stats.active_users %></b></a>
+      <a href="#apiaries">Пасеки <b><%= apiaries.length %></b></a>
+      <a href="#inquiries">Заявки <b><%= stats.new_inquiries %></b></a>
+      <a href="#audit">История действий</a>
+    </nav>
+
+    <div class="admin-content">
+      <section id="overview" class="admin-stats">
+        <article class="admin-stat admin-stat-primary"><span>Пользователи</span><strong><%= number(stats.active_users) %></strong><p><%= number(stats.suppliers) %> поставщиков · <%= number(stats.buyers) %> закупщиков</p></article>
+        <article><span>Пасеки в каталоге</span><strong><%= number(stats.published_apiaries) %></strong><p><%= number(stats.active_lots) %> активных партий</p></article>
+        <article><span>Мёд в наличии</span><strong><%= number(stats.stock_kg) %> <em>кг</em></strong><p>по опубликованным предложениям</p></article>
+        <article><span>Заявки</span><strong><%= number(stats.inquiries) %></strong><p><%= number(stats.new_inquiries) %> новых · <%= number(stats.agreed_inquiries) %> договорились</p></article>
+      </section>
+
+      <section id="analytics" class="admin-analytics-grid">
+        <article class="dashboard-card chart-card">
+          <div class="dashboard-card-heading"><div><span class="section-kicker">Рост</span><h2>Регистрации за 14 дней</h2></div><span>аккаунты</span></div>
+          <div class="registration-chart" aria-label="График регистраций">
+            <% registrationTrend.forEach(item => { %><div><span class="chart-column"><i data-chart-height="<%= Math.max(7, Math.round(item.count / trendMax * 100)) %>"></i></span><b><%= item.count %></b><small><%= item.label %></small></div><% }) %>
+          </div>
+        </article>
+        <article class="dashboard-card chart-card">
+          <div class="dashboard-card-heading"><div><span class="section-kicker">Предложение</span><h2>Запас по хозяйствам</h2></div><span>топ-5</span></div>
+          <div class="supply-bars">
+            <% supplyLeaders.forEach(item => { %><div><p><span><%= item.name %></span><b><%= number(item.stock_kg) %> кг</b></p><span class="bar-track"><i data-bar-width="<%= Math.round(Number(item.stock_kg) / supplyMax * 100) %>"></i></span></div><% }) %>
+          </div>
+        </article>
+      </section>
+
+      <section id="users" class="dashboard-card admin-section">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Доступ и роли</span><h2>Пользователи</h2></div><span><%= users.length %> показано</span></div>
+        <form class="admin-filter" method="get" action="/admin#users">
+          <label class="field"><span class="sr-only">Поиск</span><input name="q" value="<%= filters.q %>" placeholder="Email, имя или компания"></label>
+          <label class="field"><span class="sr-only">Тип аккаунта</span><select name="role"><option value="">Все роли</option><option value="supplier" <%= filters.role === 'supplier' ? 'selected' : '' %>>Поставщики</option><option value="buyer" <%= filters.role === 'buyer' ? 'selected' : '' %>>Закупщики</option></select></label>
+          <button class="button button-dark" type="submit">Найти</button><a class="button button-outline-dark" href="/admin#users">Сбросить</a>
+        </form>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead><tr><th>Пользователь</th><th>Роль</th><th>Активность</th><th>Объект</th><th>Управление</th></tr></thead>
+            <tbody><% users.forEach(user => { %><tr class="<%= user.disabled ? 'row-disabled' : '' %>">
+              <td><strong><%= user.company_name || user.display_name %></strong><small><%= user.email %></small><% if (user.is_admin) { %><span class="admin-badge">администратор</span><% } %></td>
+              <td><span class="role-pill role-<%= user.role %>"><%= user.role === 'supplier' ? 'Поставщик' : 'Закупщик' %></span></td>
+              <td><strong><%= user.disabled ? 'Отключён' : user.active_sessions ? 'Сейчас активен' : 'Доступ разрешён' %></strong><small><%= user.last_login_at ? `Вход ${new Date(user.last_login_at + 'Z').toLocaleDateString('ru-RU')}` : 'Ещё не входил' %></small></td>
+              <td><% if (user.apiary_id) { %><a class="admin-object-link" href="/admin/apiaries/<%= user.apiary_id %>/edit"><%= user.apiary_name %> →</a><% } else { %><span><%= user.buyer_inquiries %> заявок</span><% } %></td>
+              <td><div class="admin-actions">
+                <form method="post" action="/admin/users/<%= user.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="disabled"><button class="mini-action <%= user.disabled ? 'positive' : 'danger' %>" type="submit"><%= user.disabled ? 'Включить' : 'Отключить' %></button></form>
+                <form method="post" action="/admin/users/<%= user.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="admin"><button class="mini-action" type="submit"><%= user.is_admin ? 'Снять admin' : 'Сделать admin' %></button></form>
+              </div></td>
+            </tr><% }) %></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="apiaries" class="dashboard-card admin-section">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Каталог</span><h2>Пасеки и производства</h2></div><span><%= apiaries.length %> карточек</span></div>
+        <div class="admin-apiary-grid">
+          <% apiaries.forEach(apiary => { %><article class="admin-apiary-card">
+            <div class="admin-apiary-thumb accent-<%= apiary.accent %>"><% if (apiary.cover_image) { %><img src="<%= apiary.cover_image %>" alt=""><% } else { %><span>⬡</span><% } %></div>
+            <div class="admin-apiary-copy"><div class="badges"><span class="badge <%= apiary.published ? 'badge-green' : '' %>"><%= apiary.published ? 'в каталоге' : 'черновик' %></span><% if (apiary.is_demo) { %><span class="badge">демо</span><% } %></div><h3><%= apiary.name %></h3><p><%= apiary.owner_email %> · <%= cityMap.get(apiary.city_code)?.name || 'город не задан' %></p><div class="admin-apiary-metrics"><span><b><%= apiary.lots_count %></b> партий</span><span><b><%= number(apiary.stock_kg) %></b> кг</span><span><b><%= apiary.inquiries_count %></b> заявок</span></div></div>
+            <div class="admin-apiary-actions"><a class="button button-small button-outline-dark" href="/admin/apiaries/<%= apiary.id %>/edit">Редактировать</a><form method="post" action="/admin/apiaries/<%= apiary.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="published"><button class="mini-action" type="submit"><%= apiary.published ? 'Снять' : 'Опубликовать' %></button></form><form method="post" action="/admin/apiaries/<%= apiary.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="action" value="verified"><button class="mini-action positive" type="submit"><%= apiary.verified ? 'Проверено ✓' : 'Подтвердить' %></button></form></div>
+          </article><% }) %>
+        </div>
+      </section>
+
+      <section id="inquiries" class="dashboard-card admin-section">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Сделки</span><h2>Все заявки</h2></div><span><%= inquiries.length %> последних</span></div>
+        <% if (inquiries.length) { %><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Закупщик</th><th>Пасека</th><th>Запрос</th><th>Дата</th><th>Статус</th></tr></thead><tbody>
+          <% inquiries.forEach(inquiry => { %><tr><td><strong><%= inquiry.buyer_company || inquiry.buyer_name %></strong><small><%= inquiry.buyer_email %></small></td><td><strong><%= inquiry.apiary_name %></strong><small><%= inquiry.variety || 'любая партия' %></small></td><td><strong><%= number(inquiry.volume_kg) %> кг</strong><small><%= inquiry.delivery_city %></small></td><td><%= new Date(inquiry.created_at + 'Z').toLocaleDateString('ru-RU') %></td><td><form method="post" action="/admin/inquiries/<%= inquiry.id %>/status"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><select name="status" data-auto-submit><option value="new" <%= inquiry.status === 'new' ? 'selected' : '' %>>Новая</option><option value="contacted" <%= inquiry.status === 'contacted' ? 'selected' : '' %>>Связались</option><option value="agreed" <%= inquiry.status === 'agreed' ? 'selected' : '' %>>Договорились</option><option value="closed" <%= inquiry.status === 'closed' ? 'selected' : '' %>>Закрыта</option></select></form></td></tr><% }) %>
+        </tbody></table></div><% } else { %><div class="empty-inline"><span>↗</span><div><h3>Пока нет заявок</h3><p>Новые обращения закупщиков появятся здесь.</p></div></div><% } %>
+      </section>
+
+      <section id="audit" class="dashboard-card admin-section audit-section">
+        <div class="dashboard-card-heading"><div><span class="section-kicker">Контроль</span><h2>История действий</h2></div><span>последние 30</span></div>
+        <% if (audit.length) { %><div class="audit-list"><% audit.forEach(item => { %><div><span>●</span><p><strong><%= item.action %></strong><small><%= item.details || `${item.entity_type} #${item.entity_id}` %></small></p><time><%= new Date(item.created_at + 'Z').toLocaleString('ru-RU') %></time></div><% }) %></div><% } else { %><div class="empty-inline"><span>✓</span><div><h3>История пока пуста</h3><p>Изменения пользователей, пасек и заявок будут фиксироваться здесь.</p></div></div><% } %>
+      </section>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>

@@ -55,6 +55,13 @@ const projectRoot = resolve(moduleDir, '..');
 const production = process.env.NODE_ENV === 'production';
 const databasePath = process.env.DATABASE_PATH || resolve(projectRoot, 'data', 'medogram.sqlite');
 const secureCookies = production;
+const configuredAdminEmail = () => String(process.env.ADMIN_EMAIL || '').trim().toLocaleLowerCase('ru');
+const coverChoices = [
+  { value: '', label: 'Фирменная иллюстрация без фотографии' },
+  { value: '/assets/apiaries/belaya-reka.webp', label: 'Горная пасека «Белая река»' },
+  { value: '/assets/apiaries/bortniki-nugusha.webp', label: 'Лесная пасека у Нугуша' },
+  { value: '/assets/apiaries/toratau-med.webp', label: 'Пасека у Торатау' },
+] as const;
 
 export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   const app = express();
@@ -65,6 +72,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
   app.locals.money = money;
   app.locals.number = number;
   app.locals.cityMap = cityMap;
+  app.locals.coverChoices = coverChoices;
   app.locals.year = new Date().getFullYear();
 
   app.use(helmet({
@@ -136,6 +144,23 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       return response.redirect(`/dashboard?notice=${encodeURIComponent('Это действие доступно для другой роли')}&type=error`);
     }
     return next();
+  };
+
+  const requireAdmin = (request: Request, response: Response, next: NextFunction) => {
+    if (!response.locals.currentUser) return requireAuth(request, response, next);
+    if (!response.locals.currentUser.is_admin) {
+      return response.status(403).render('error', {
+        title: 'Нет доступа', status: 403, message: 'Эта страница доступна только администратору pchela.shop.',
+      });
+    }
+    return next();
+  };
+
+  const auditAdmin = (adminUserId: number, action: string, entityType: string, entityId: number | null, details = '') => {
+    db.prepare(`
+      INSERT INTO admin_audit (admin_user_id, action, entity_type, entity_id, details)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(adminUserId, action, entityType, entityId, details);
   };
 
   const authLimiter = rateLimit({
@@ -278,6 +303,7 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     if (response.locals.currentUser) return response.redirect('/dashboard');
     const role = request.body.role === 'buyer' ? 'buyer' : 'supplier';
     const email = asText(request.body.email, 180).toLocaleLowerCase('ru');
+    const adminEmail = configuredAdminEmail();
     const password = String(request.body.password || '');
     const displayName = asText(request.body.display_name, 100);
     const companyName = asText(request.body.company_name, 140);
@@ -295,9 +321,9 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     try {
       db.exec('BEGIN IMMEDIATE');
       const result = db.prepare(`
-        INSERT INTO users (email, password_hash, role, display_name, company_name, city_code)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `).run(email, hashPassword(password), role, displayName, companyName, cityCode);
+        INSERT INTO users (email, password_hash, role, display_name, company_name, city_code, is_admin)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(email, hashPassword(password), role, displayName, companyName, cityCode, adminEmail && email === adminEmail ? 1 : 0);
       const userId = Number(result.lastInsertRowid);
       if (role === 'supplier') {
         const baseName = companyName || `Пасека ${displayName}`;
@@ -311,7 +337,8 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       }
       db.exec('COMMIT');
       createSession(db, response, userId, secureCookies);
-      return response.redirect(`${nextUrl}?notice=${encodeURIComponent(role === 'supplier' ? 'Аккаунт создан. Заполните карточку пасеки и добавьте первую партию.' : 'Аккаунт закупщика создан. Теперь можно отправлять заявки.')}`);
+      const destination = adminEmail && email === adminEmail ? '/admin' : nextUrl;
+      return response.redirect(`${destination}?notice=${encodeURIComponent(adminEmail && email === adminEmail ? 'Администратор создан. Добро пожаловать в панель управления.' : role === 'supplier' ? 'Аккаунт создан. Заполните карточку пасеки и добавьте первую партию.' : 'Аккаунт закупщика создан. Теперь можно отправлять заявки.')}`);
     } catch (errorValue) {
       try { db.exec('ROLLBACK'); } catch { /* transaction was not started */ }
       const duplicate = String(errorValue).includes('UNIQUE');
@@ -335,8 +362,10 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     if (!user || !verifyPassword(password, user.password_hash)) {
       return response.status(401).render('login', { title: 'Войти — pchela.shop', next: nextUrl, error: 'Неверный email или пароль.', email });
     }
+    db.prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
     createSession(db, response, user.id, secureCookies);
-    return response.redirect(nextUrl);
+    const isAdmin = Boolean((db.prepare('SELECT is_admin FROM users WHERE id = ?').get(user.id) as { is_admin: number }).is_admin);
+    return response.redirect(isAdmin && nextUrl === '/dashboard' ? '/admin' : nextUrl);
   });
 
   app.post('/logout', requireAuth, (request, response) => {
@@ -376,24 +405,56 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
     return response.render('dashboard-buyer', { title: 'Кабинет закупщика — pchela.shop', inquiries, favorites });
   });
 
+  app.post('/dashboard/account', requireAuth, (request, response) => {
+    const user = response.locals.currentUser!;
+    const displayName = asText(request.body.display_name, 100);
+    const companyName = asText(request.body.company_name, 140);
+    const cityCode = cityMap.has(asText(request.body.city_code, 40)) ? asText(request.body.city_code, 40) : '';
+    if (!displayName || !cityCode) {
+      return response.redirect(`/dashboard?notice=${encodeURIComponent('Укажите имя и ближайший город')}&type=error#account`);
+    }
+    db.prepare('UPDATE users SET display_name = ?, company_name = ?, city_code = ? WHERE id = ?')
+      .run(displayName, companyName, cityCode, user.id);
+    return response.redirect(`/dashboard?notice=${encodeURIComponent('Данные аккаунта обновлены')}#account`);
+  });
+
+  app.post('/dashboard/password', authLimiter, requireAuth, (request, response) => {
+    const user = response.locals.currentUser!;
+    const currentPassword = String(request.body.current_password || '');
+    const newPassword = String(request.body.new_password || '');
+    const row = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(user.id) as { password_hash: string };
+    if (!verifyPassword(currentPassword, row.password_hash)) {
+      return response.redirect(`/dashboard?notice=${encodeURIComponent('Текущий пароль указан неверно')}&type=error#account`);
+    }
+    if (newPassword.length < 8) {
+      return response.redirect(`/dashboard?notice=${encodeURIComponent('Новый пароль должен быть не короче 8 символов')}&type=error#account`);
+    }
+    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(newPassword), user.id);
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(user.id);
+    createSession(db, response, user.id, secureCookies);
+    return response.redirect(`/dashboard?notice=${encodeURIComponent('Пароль изменён, остальные сеансы завершены')}#account`);
+  });
+
   app.post('/dashboard/profile', requireRole('supplier'), (_request, response) => {
     const request = _request as Request;
     const user = response.locals.currentUser!;
     const cityCode = cityMap.has(asText(request.body.city_code, 40)) ? asText(request.body.city_code, 40) : '';
     const name = asText(request.body.name, 140);
+    const requestedCover = asText(request.body.cover_image, 220);
+    const coverImage = coverChoices.some((choice) => choice.value === requestedCover) ? requestedCover : '';
     if (!name || !cityCode) return response.redirect(`/dashboard?notice=${encodeURIComponent('Укажите название и ближайший город')}&type=error`);
     db.prepare(`
       UPDATE apiaries SET
         name = ?, story = ?, city_code = ?, location_detail = ?, years_experience = ?, hives_count = ?,
         production_type = ?, delivery = ?, certifications = ?, lab_verified = ?, frame_available = ?,
-        published = ?, updated_at = CURRENT_TIMESTAMP
+        published = ?, cover_image = ?, updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ?
     `).run(
       name, asText(request.body.story, 1800), cityCode, asText(request.body.location_detail, 180),
       asInt(request.body.years_experience, 0, 100), asInt(request.body.hives_count, 0, 100000),
       asText(request.body.production_type, 100), asText(request.body.delivery, 500),
       asText(request.body.certifications, 500), request.body.lab_verified === '1' ? 1 : 0,
-      request.body.frame_available === '1' ? 1 : 0, request.body.published === '1' ? 1 : 0, user.id,
+      request.body.frame_available === '1' ? 1 : 0, request.body.published === '1' ? 1 : 0, coverImage, user.id,
     );
     return response.redirect(`/dashboard?notice=${encodeURIComponent('Карточка пасеки сохранена')}`);
   });
@@ -465,6 +526,183 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
       AND apiary_id = (SELECT id FROM apiaries WHERE user_id = ?)
     `).run(status, id, response.locals.currentUser!.id);
     return response.redirect(`/dashboard?notice=${encodeURIComponent('Статус заявки обновлён')}`);
+  });
+
+  app.get('/admin', requireAdmin, (request, response) => {
+    const stats = db.prepare(`
+      SELECT
+        (SELECT COUNT(*) FROM users WHERE disabled = 0) AS active_users,
+        (SELECT COUNT(*) FROM users WHERE role = 'supplier' AND disabled = 0) AS suppliers,
+        (SELECT COUNT(*) FROM users WHERE role = 'buyer' AND disabled = 0) AS buyers,
+        (SELECT COUNT(*) FROM apiaries WHERE published = 1) AS published_apiaries,
+        (SELECT COUNT(*) FROM lots WHERE available = 1) AS active_lots,
+        (SELECT COALESCE(SUM(stock_kg), 0) FROM lots WHERE available = 1) AS stock_kg,
+        (SELECT COUNT(*) FROM inquiries) AS inquiries,
+        (SELECT COUNT(*) FROM inquiries WHERE status = 'new') AS new_inquiries,
+        (SELECT COUNT(*) FROM inquiries WHERE status = 'agreed') AS agreed_inquiries
+    `).get() as Record<string, number>;
+
+    const q = asText(request.query.q, 100);
+    const role = ['supplier', 'buyer'].includes(String(request.query.role)) ? String(request.query.role) : '';
+    const like = `%${q}%`;
+    const users = db.prepare(`
+      SELECT u.*, a.id AS apiary_id, a.name AS apiary_name, a.published,
+        (SELECT COUNT(*) FROM inquiries i WHERE i.buyer_user_id = u.id) AS buyer_inquiries,
+        (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > datetime('now')) AS active_sessions
+      FROM users u
+      LEFT JOIN apiaries a ON a.user_id = u.id
+      WHERE (? = '' OR u.role = ?)
+        AND (? = '' OR u.email LIKE ? OR u.display_name LIKE ? OR u.company_name LIKE ?)
+      ORDER BY u.is_admin DESC, u.disabled ASC, u.created_at DESC
+      LIMIT 150
+    `).all(role, role, q, like, like, like);
+
+    const apiaries = db.prepare(`
+      SELECT a.*, u.email AS owner_email, u.display_name AS owner_name, u.disabled AS owner_disabled,
+        (SELECT COUNT(*) FROM lots l WHERE l.apiary_id = a.id) AS lots_count,
+        (SELECT COALESCE(SUM(l.stock_kg), 0) FROM lots l WHERE l.apiary_id = a.id AND l.available = 1) AS stock_kg,
+        (SELECT COUNT(*) FROM inquiries i WHERE i.apiary_id = a.id) AS inquiries_count
+      FROM apiaries a
+      JOIN users u ON u.id = a.user_id
+      ORDER BY a.is_demo ASC, a.published DESC, a.updated_at DESC
+    `).all();
+
+    const inquiries = db.prepare(`
+      SELECT i.*, buyer.email AS buyer_email, buyer.company_name AS buyer_company, buyer.display_name AS buyer_name,
+        a.name AS apiary_name, l.variety
+      FROM inquiries i
+      JOIN users buyer ON buyer.id = i.buyer_user_id
+      JOIN apiaries a ON a.id = i.apiary_id
+      LEFT JOIN lots l ON l.id = i.lot_id
+      ORDER BY i.created_at DESC LIMIT 80
+    `).all();
+
+    const rawTrend = db.prepare(`
+      SELECT date(created_at) AS day, COUNT(*) AS count
+      FROM users WHERE created_at >= date('now', '-13 days')
+      GROUP BY date(created_at) ORDER BY day
+    `).all() as Array<{ day: string; count: number }>;
+    const trendMap = new Map(rawTrend.map((item) => [item.day, Number(item.count)]));
+    const registrationTrend = Array.from({ length: 14 }, (_, index) => {
+      const date = new Date();
+      date.setUTCHours(0, 0, 0, 0);
+      date.setUTCDate(date.getUTCDate() - (13 - index));
+      const day = date.toISOString().slice(0, 10);
+      return { day, label: new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short' }).format(date), count: trendMap.get(day) || 0 };
+    });
+    const trendMax = Math.max(1, ...registrationTrend.map((item) => item.count));
+
+    const supplyLeaders = db.prepare(`
+      SELECT a.name, COALESCE(SUM(CASE WHEN l.available = 1 THEN l.stock_kg ELSE 0 END), 0) AS stock_kg
+      FROM apiaries a LEFT JOIN lots l ON l.apiary_id = a.id
+      GROUP BY a.id ORDER BY stock_kg DESC LIMIT 5
+    `).all() as Array<{ name: string; stock_kg: number }>;
+    const supplyMax = Math.max(1, ...supplyLeaders.map((item) => Number(item.stock_kg)));
+
+    const audit = db.prepare(`
+      SELECT aa.*, u.email AS admin_email
+      FROM admin_audit aa JOIN users u ON u.id = aa.admin_user_id
+      ORDER BY aa.created_at DESC LIMIT 30
+    `).all();
+
+    return response.render('admin', {
+      title: 'Админ-панель — pchela.shop', stats, users, apiaries, inquiries, registrationTrend,
+      trendMax, supplyLeaders, supplyMax, audit, filters: { q, role },
+    });
+  });
+
+  app.post('/admin/users/:id/toggle', requireAdmin, (request, response) => {
+    const admin = response.locals.currentUser!;
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const action = asText(request.body.action, 30);
+    const target = db.prepare('SELECT id, email, disabled, is_admin FROM users WHERE id = ?').get(id) as { id: number; email: string; disabled: number; is_admin: number } | undefined;
+    if (!target) return response.redirect(`/admin?notice=${encodeURIComponent('Пользователь не найден')}&type=error#users`);
+    if (target.id === admin.id && (action === 'disabled' || (action === 'admin' && target.is_admin))) {
+      return response.redirect(`/admin?notice=${encodeURIComponent('Нельзя отключить собственный административный доступ')}&type=error#users`);
+    }
+    if (action === 'disabled') {
+      const nextValue = target.disabled ? 0 : 1;
+      db.prepare('UPDATE users SET disabled = ? WHERE id = ?').run(nextValue, id);
+      if (nextValue) db.prepare('DELETE FROM sessions WHERE user_id = ?').run(id);
+      auditAdmin(admin.id, nextValue ? 'user_disabled' : 'user_enabled', 'user', id, target.email);
+      return response.redirect(`/admin?notice=${encodeURIComponent(nextValue ? 'Пользователь отключён' : 'Пользователь включён')}#users`);
+    }
+    if (action === 'admin') {
+      const nextValue = target.is_admin ? 0 : 1;
+      db.prepare('UPDATE users SET is_admin = ? WHERE id = ?').run(nextValue, id);
+      auditAdmin(admin.id, nextValue ? 'admin_granted' : 'admin_revoked', 'user', id, target.email);
+      return response.redirect(`/admin?notice=${encodeURIComponent(nextValue ? 'Доступ администратора выдан' : 'Доступ администратора отозван')}#users`);
+    }
+    return response.redirect(`/admin?notice=${encodeURIComponent('Неизвестное действие')}&type=error#users`);
+  });
+
+  app.post('/admin/apiaries/:id/toggle', requireAdmin, (request, response) => {
+    const admin = response.locals.currentUser!;
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const action = asText(request.body.action, 30);
+    const column = action === 'published' ? 'published' : action === 'verified' ? 'verified' : '';
+    if (!column) return response.redirect(`/admin?notice=${encodeURIComponent('Неизвестное действие')}&type=error#apiaries`);
+    const apiary = db.prepare(`SELECT id, name, ${column} AS value FROM apiaries WHERE id = ?`).get(id) as { id: number; name: string; value: number } | undefined;
+    if (!apiary) return response.redirect(`/admin?notice=${encodeURIComponent('Пасека не найдена')}&type=error#apiaries`);
+    const nextValue = apiary.value ? 0 : 1;
+    db.prepare(`UPDATE apiaries SET ${column} = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).run(nextValue, id);
+    auditAdmin(admin.id, `${column}_${nextValue ? 'enabled' : 'disabled'}`, 'apiary', id, apiary.name);
+    return response.redirect(`/admin?notice=${encodeURIComponent(column === 'published' ? (nextValue ? 'Пасека опубликована' : 'Пасека снята с публикации') : (nextValue ? 'Пасека подтверждена' : 'Подтверждение снято'))}#apiaries`);
+  });
+
+  app.get('/admin/apiaries/:id/edit', requireAdmin, (request, response) => {
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const apiary = db.prepare(`
+      SELECT a.*, u.email AS owner_email, u.display_name AS owner_name, u.company_name AS owner_company
+      FROM apiaries a JOIN users u ON u.id = a.user_id WHERE a.id = ?
+    `).get(id) as Record<string, unknown> | undefined;
+    if (!apiary) return response.status(404).render('error', { title: 'Пасека не найдена', status: 404, message: 'Карточка была удалена или не существует.' });
+    const lots = db.prepare('SELECT * FROM lots WHERE apiary_id = ? ORDER BY created_at DESC').all(id);
+    return response.render('admin-apiary', { title: `Редактирование ${apiary.name} — pchela.shop`, apiary, lots });
+  });
+
+  app.post('/admin/apiaries/:id', requireAdmin, (request, response) => {
+    const admin = response.locals.currentUser!;
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const cityCode = cityMap.has(asText(request.body.city_code, 40)) ? asText(request.body.city_code, 40) : '';
+    const name = asText(request.body.name, 140);
+    const requestedCover = asText(request.body.cover_image, 220);
+    const coverImage = coverChoices.some((choice) => choice.value === requestedCover) ? requestedCover : '';
+    if (!name || !cityCode) return response.redirect(`/admin/apiaries/${id}/edit?notice=${encodeURIComponent('Укажите название и город')}&type=error`);
+    const result = db.prepare(`
+      UPDATE apiaries SET name = ?, story = ?, city_code = ?, location_detail = ?, years_experience = ?, hives_count = ?,
+        production_type = ?, delivery = ?, certifications = ?, lab_verified = ?, frame_available = ?, verified = ?,
+        published = ?, cover_image = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+    `).run(
+      name, asText(request.body.story, 1800), cityCode, asText(request.body.location_detail, 180),
+      asInt(request.body.years_experience, 0, 100), asInt(request.body.hives_count, 0, 100000),
+      asText(request.body.production_type, 100), asText(request.body.delivery, 500), asText(request.body.certifications, 500),
+      request.body.lab_verified === '1' ? 1 : 0, request.body.frame_available === '1' ? 1 : 0,
+      request.body.verified === '1' ? 1 : 0, request.body.published === '1' ? 1 : 0, coverImage, id,
+    );
+    if (!result.changes) return response.redirect(`/admin?notice=${encodeURIComponent('Пасека не найдена')}&type=error#apiaries`);
+    auditAdmin(admin.id, 'apiary_updated', 'apiary', id, name);
+    return response.redirect(`/admin/apiaries/${id}/edit?notice=${encodeURIComponent('Карточка пасеки сохранена')}`);
+  });
+
+  app.post('/admin/lots/:id/toggle', requireAdmin, (request, response) => {
+    const admin = response.locals.currentUser!;
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const lot = db.prepare('SELECT l.id, l.apiary_id, l.variety, l.available FROM lots l WHERE l.id = ?').get(id) as { id: number; apiary_id: number; variety: string; available: number } | undefined;
+    if (!lot) return response.redirect(`/admin?notice=${encodeURIComponent('Партия не найдена')}&type=error#apiaries`);
+    const nextValue = lot.available ? 0 : 1;
+    db.prepare('UPDATE lots SET available = ? WHERE id = ?').run(nextValue, id);
+    auditAdmin(admin.id, nextValue ? 'lot_enabled' : 'lot_disabled', 'lot', id, lot.variety);
+    return response.redirect(`/admin/apiaries/${lot.apiary_id}/edit?notice=${encodeURIComponent('Доступность партии изменена')}#lots`);
+  });
+
+  app.post('/admin/inquiries/:id/status', requireAdmin, (request, response) => {
+    const admin = response.locals.currentUser!;
+    const id = asInt(request.params.id, 1, Number.MAX_SAFE_INTEGER);
+    const status = ['new', 'contacted', 'agreed', 'closed'].includes(request.body.status) ? request.body.status : 'new';
+    const result = db.prepare('UPDATE inquiries SET status = ? WHERE id = ?').run(status, id);
+    if (result.changes) auditAdmin(admin.id, 'inquiry_status_updated', 'inquiry', id, status);
+    return response.redirect(`/admin?notice=${encodeURIComponent(result.changes ? 'Статус заявки обновлён' : 'Заявка не найдена')}${result.changes ? '' : '&type=error'}#inquiries`);
   });
 
   app.use((_request, response) => response.status(404).render('error', {

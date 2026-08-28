@@ -12,6 +12,11 @@ export function openDatabase(path: string): DatabaseSync {
   return db;
 }
 
+function ensureColumn(db: DatabaseSync, table: string, column: string, definition: string): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  if (!columns.some((item) => item.name === column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+}
+
 function migrate(db: DatabaseSync): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -91,10 +96,36 @@ function migrate(db: DatabaseSync): void {
       PRIMARY KEY (user_id, apiary_id)
     );
 
+    CREATE TABLE IF NOT EXISTS admin_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      admin_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id INTEGER,
+      details TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE INDEX IF NOT EXISTS lots_apiary_available_idx ON lots(apiary_id, available);
     CREATE INDEX IF NOT EXISTS inquiries_apiary_idx ON inquiries(apiary_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS sessions_expiry_idx ON sessions(expires_at);
+    CREATE INDEX IF NOT EXISTS admin_audit_created_idx ON admin_audit(created_at DESC);
   `);
+
+  ensureColumn(db, 'users', 'is_admin', 'INTEGER NOT NULL DEFAULT 0');
+  ensureColumn(db, 'users', 'last_login_at', 'TEXT');
+  ensureColumn(db, 'apiaries', 'cover_image', "TEXT NOT NULL DEFAULT ''");
+
+  const adminEmail = String(process.env.ADMIN_EMAIL || '').trim().toLocaleLowerCase('ru');
+  if (adminEmail) db.prepare('UPDATE users SET is_admin = 1 WHERE email = ? COLLATE NOCASE').run(adminEmail);
+
+  const demoUpdates = [
+    ['belaya-reka', '/assets/apiaries/belaya-reka.webp', 'Семейная кочевая пасека в предгорьях Южного Урала. Идём вслед за цветением липы и горного разнотравья, не смешиваем точки и фиксируем происхождение каждой партии. Для магазина подготовим образец, протокол и график поставок на сезон.'],
+    ['bortniki-nugusha', '/assets/apiaries/bortniki-nugusha.webp', 'Лесная пасека у Нугуша вдали от интенсивных полей. Работаем небольшими однородными партиями, контролируем влажность перед отгрузкой и можем фасовать мёд под маркой хозяйства для локальной розницы.'],
+    ['toratau-med', '/assets/apiaries/toratau-med.webp', 'Растущее хозяйство у шиханов с понятным запасом и гибкими условиями для первой закупки. Согласуем тару, минимальный объём и график отгрузки; сезонные партии держим отдельно, чтобы закупщик мог повторить удачный заказ.'],
+  ] as const;
+  const updateDemo = db.prepare('UPDATE apiaries SET cover_image = ?, story = ?, updated_at = CURRENT_TIMESTAMP WHERE slug = ? AND is_demo = 1');
+  for (const [slug, image, story] of demoUpdates) updateDemo.run(image, story, slug);
 }
 
 function seedDemo(db: DatabaseSync): void {
@@ -106,7 +137,8 @@ function seedDemo(db: DatabaseSync): void {
       name: 'Белая река', city: 'beloretsk', detail: 'Предгорья Южного Урала', years: 14, hives: 180,
       type: 'Семейная кочевая пасека', delivery: 'Самовывоз, доставка по Башкортостану от 300 кг',
       certs: 'Ветеринарное свидетельство, протокол партии', lab: 1, frame: 1, accent: 'forest', verified: 1,
-      story: 'Кочуем вслед за цветением липы и горного разнотравья. Каждая партия хранится отдельно: можно выбрать происхождение, дату качки и формат поставки.',
+      cover: '/assets/apiaries/belaya-reka.webp',
+      story: 'Семейная кочевая пасека в предгорьях Южного Урала. Идём вслед за цветением липы и горного разнотравья, не смешиваем точки и фиксируем происхождение каждой партии. Для магазина подготовим образец, протокол и график поставок на сезон.',
       lots: [
         ['Горное разнотравье', 'Запечатанная рамка', 2026, 420, 20, 920, 'Рамка Дадан', 'Можно принять партию до распечатки'],
         ['Башкирская липа', 'Мёд в таре', 2026, 1350, 100, 610, 'Куботейнер 23 кг', 'Свежая качка, партия с единым происхождением'],
@@ -116,7 +148,8 @@ function seedDemo(db: DatabaseSync): void {
       name: 'Бортники Нугуша', city: 'nugush', detail: 'Национальный парк «Башкирия»', years: 9, hives: 96,
       type: 'Стационарная лесная пасека', delivery: 'Доставка до Уфы и Стерлитамака, транспортная компания',
       certs: 'Паспорт пасеки, лабораторный анализ', lab: 1, frame: 0, accent: 'blue', verified: 1,
-      story: 'Лесная пасека вдали от интенсивных полей. Работаем небольшими партиями и не смешиваем урожай разных точков.',
+      cover: '/assets/apiaries/bortniki-nugusha.webp',
+      story: 'Лесная пасека у Нугуша вдали от интенсивных полей. Работаем небольшими однородными партиями, контролируем влажность перед отгрузкой и можем фасовать мёд под маркой хозяйства для локальной розницы.',
       lots: [
         ['Лесное разнотравье', 'Мёд в таре', 2026, 780, 50, 680, 'Куботейнер 23 кг', 'Влажность партии указана в протоколе'],
         ['Цветочный', 'Фасованный продукт', 2026, 320, 30, 760, 'Стекло 500 г, короб 12 шт.', 'Готово для полки под маркой производителя'],
@@ -126,7 +159,8 @@ function seedDemo(db: DatabaseSync): void {
       name: 'Торатау мёд', city: 'ishimbay', detail: 'Ишимбайский район', years: 7, hives: 74,
       type: 'Фермерское хозяйство', delivery: 'Самовывоз или доставка от 150 кг',
       certs: 'Паспорт пасеки', lab: 0, frame: 1, accent: 'clay', verified: 0,
-      story: 'Молодое хозяйство у шиханов. Открыты к контракту на сезон и готовы согласовывать тару, объём и график отгрузки с магазинами.',
+      cover: '/assets/apiaries/toratau-med.webp',
+      story: 'Растущее хозяйство у шиханов с понятным запасом и гибкими условиями для первой закупки. Согласуем тару, минимальный объём и график отгрузки; сезонные партии держим отдельно, чтобы закупщик мог повторить удачный заказ.',
       lots: [
         ['Гречишный', 'Запечатанная рамка', 2026, 210, 10, 840, 'Полурамка', 'Доступно ограниченное количество до качки'],
         ['Разнотравье', 'Мёд в таре', 2026, 560, 50, 540, 'Ведро 12 кг', 'Образец партии по запросу'],
@@ -142,8 +176,8 @@ function seedDemo(db: DatabaseSync): void {
     INSERT INTO apiaries (
       user_id, slug, name, story, city_code, location_detail, years_experience, hives_count,
       production_type, delivery, certifications, lab_verified, frame_available, verified,
-      published, is_demo, accent
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)
+      published, is_demo, accent, cover_image
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?, ?)
   `);
   const insertLot = db.prepare(`
     INSERT INTO lots (apiary_id, variety, form, harvest_year, stock_kg, min_order_kg, price_per_kg, packaging, quality_note)
@@ -162,7 +196,7 @@ function seedDemo(db: DatabaseSync): void {
     const apiaryResult = insertApiary.run(
       userId, slugify(apiary.name), apiary.name, apiary.story, apiary.city,
       apiary.detail || city?.name || '', apiary.years, apiary.hives, apiary.type,
-      apiary.delivery, apiary.certs, apiary.lab, apiary.frame, apiary.verified, apiary.accent,
+      apiary.delivery, apiary.certs, apiary.lab, apiary.frame, apiary.verified, apiary.accent, apiary.cover,
     );
     const apiaryId = Number(apiaryResult.lastInsertRowid);
     for (const lot of apiary.lots) insertLot.run(apiaryId, ...lot);

@@ -1,0 +1,26 @@
+<section class="dashboard-card account-settings" id="account">
+  <div class="dashboard-card-heading">
+    <div><span class="section-kicker">Учётная запись</span><h2>Контакты и безопасность</h2></div>
+    <% if (currentUser.is_admin) { %><a class="admin-shortcut" href="/admin">Открыть админку →</a><% } %>
+  </div>
+  <div class="account-settings-grid">
+    <form method="post" action="/dashboard/account">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <h3>Данные аккаунта</h3>
+      <label class="field"><span>Email</span><input value="<%= currentUser.email %>" disabled><small>Email используется для входа и не меняется из кабинета.</small></label>
+      <div class="filter-two">
+        <label class="field"><span>Ваше имя</span><input name="display_name" value="<%= currentUser.display_name %>" required></label>
+        <label class="field"><span>Компания / хозяйство</span><input name="company_name" value="<%= currentUser.company_name %>"></label>
+      </div>
+      <label class="field"><span>Ближайший город</span><select name="city_code" required><% cities.forEach(city => { %><option value="<%= city.code %>" <%= currentUser.city_code === city.code ? 'selected' : '' %>><%= city.name %></option><% }) %></select></label>
+      <button class="button button-dark" type="submit">Сохранить данные</button>
+    </form>
+    <form method="post" action="/dashboard/password">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <h3>Сменить пароль</h3>
+      <label class="field"><span>Текущий пароль</span><input name="current_password" type="password" autocomplete="current-password" required></label>
+      <label class="field"><span>Новый пароль</span><input name="new_password" type="password" minlength="8" autocomplete="new-password" required><small>Не менее 8 символов. После смены остальные сеансы завершатся.</small></label>
+      <button class="button button-outline-dark" type="submit">Обновить пароль</button>
+    </form>
+  </div>
+</section>

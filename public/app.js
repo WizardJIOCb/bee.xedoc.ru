@@ -45,4 +45,11 @@
       if (!window.confirm(form.dataset.confirm || 'Подтвердить действие?')) event.preventDefault();
     });
   });
+
+  document.querySelectorAll('[data-bar-width]').forEach((bar) => {
+    bar.style.width = `${Math.max(0, Math.min(100, Number(bar.dataset.barWidth) || 0))}%`;
+  });
+  document.querySelectorAll('[data-chart-height]').forEach((bar) => {
+    bar.style.height = `${Math.max(0, Math.min(100, Number(bar.dataset.chartHeight) || 0))}%`;
+  });
 })();
