@@ -13,11 +13,11 @@ test('новый favicon подключён для браузеров, ярлы�
 
   try {
     const html = await fetch(`${base}/`).then((response) => response.text());
-    assert.match(html, /href="\/assets\/favicon\.svg" type="image\/svg\+xml"/);
-    assert.match(html, /href="\/assets\/favicon-32\.png" type="image\/png" sizes="32x32"/);
-    assert.match(html, /href="\/favicon\.ico"/);
-    assert.match(html, /href="\/assets\/apple-touch-icon\.png" sizes="180x180"/);
-    assert.match(html, /href="\/assets\/site\.webmanifest"/);
+    assert.match(html, /href="\/assets\/favicon\.svg\?v=20260829\.1" type="image\/svg\+xml"/);
+    assert.match(html, /href="\/assets\/favicon-32\.png\?v=20260829\.1" type="image\/png" sizes="32x32"/);
+    assert.match(html, /href="\/favicon\.ico\?v=20260829\.1"/);
+    assert.match(html, /href="\/assets\/apple-touch-icon\.png\?v=20260829\.1" sizes="180x180"/);
+    assert.match(html, /href="\/assets\/site\.webmanifest\?v=20260829\.1"/);
 
     for (const path of [
       '/assets/favicon.svg',
