@@ -1,0 +1,151 @@
+<%- include('partials/head', {
+  title,
+  bodyClass: 'future-partners-page',
+  metaDescription: 'Потенциальные партнёры для пилота Мёдограм рядом с Октябрьским: районные объединения, пасеки и профильные магазины.'
+}) %>
+<%- include('partials/header') %>
+
+<main>
+  <section class="partners-hero">
+    <div class="container partners-hero-grid">
+      <div>
+        <span class="eyebrow">Разведка партнёров · август 2026</span>
+        <h1>С кем запустить первый пилот рядом с Октябрьским</h1>
+        <p class="partners-lead">Не просто список пасек, а девять проверяемых точек входа: кто может дать первых участников, какую проблему предложить решить и как начать разговор.</p>
+        <div class="partners-actions">
+          <a class="button button-primary" href="#partner-list">Смотреть кандидатов</a>
+          <a class="button button-outline-dark" href="#seven-days">План на 7 дней</a>
+        </div>
+      </div>
+      <aside class="partners-scorecard" aria-label="Краткая сводка">
+        <span>Радиус поиска</span>
+        <strong>0–70 км</strong>
+        <div class="scorecard-row"><b>9</b><span>точек входа</span></div>
+        <div class="scorecard-row"><b>4</b><span>прямых телефона</span></div>
+        <div class="scorecard-row"><b>3–5</b><span>пасек в первом пилоте</span></div>
+        <small>Ранжирование основано на публичных сигналах. Это кандидаты на контакт, а не подтверждённые клиенты.</small>
+      </aside>
+    </div>
+  </section>
+
+  <section class="partners-patterns">
+    <div class="container">
+      <div class="partners-section-heading">
+        <span class="eyebrow">Что повторяется</span>
+        <h2>Четыре сигнала для предложения</h2>
+      </div>
+      <div class="pattern-grid">
+        <% patterns.forEach((pattern) => { %>
+          <article>
+            <strong><%= pattern.value %></strong>
+            <p><%= pattern.label %></p>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="section partners-list-section" id="partner-list">
+    <div class="container">
+      <div class="partners-section-heading partners-heading-row">
+        <div>
+          <span class="eyebrow">Кого позвать</span>
+          <h2>Кандидаты по приоритету</h2>
+        </div>
+        <p>Начните с двух районных управлений и «Дома мёда»: это самый короткий путь к нескольким содержательным разговорам.</p>
+      </div>
+
+      <div class="partner-list">
+        <% partners.forEach((partner, index) => { %>
+          <article class="partner-card">
+            <div class="partner-rank"><span><%= String(index + 1).padStart(2, '0') %></span></div>
+            <div class="partner-card-main">
+              <div class="partner-card-top">
+                <div>
+                  <div class="partner-tags">
+                    <span><%= partner.kind %></span>
+                    <span><%= partner.location %> · <%= partner.distance %></span>
+                  </div>
+                  <h3><%= partner.name %></h3>
+                </div>
+                <div class="fit-score" aria-label="Оценка приоритета <%= partner.score %> из 100">
+                  <b><%= partner.score %></b><span>/100</span>
+                </div>
+              </div>
+
+              <div class="partner-signal">
+                <span>Публичный сигнал</span>
+                <p><%= partner.signal %></p>
+              </div>
+
+              <div class="partner-details-grid">
+                <div>
+                  <span>Почему сейчас</span>
+                  <p><%= partner.whyNow %></p>
+                </div>
+                <div>
+                  <span>Как выйти</span>
+                  <p><%= partner.channel %></p>
+                  <% if (partner.phone) { %>
+                    <a class="partner-phone" href="tel:<%= partner.phoneHref %>"><%= partner.phone %></a>
+                  <% } %>
+                </div>
+              </div>
+
+              <details class="partner-opener">
+                <summary>Что сказать при первом контакте</summary>
+                <p>«<%= partner.opener %>»</p>
+                <% if (partner.caution) { %><small><b>Важно:</b> <%= partner.caution %></small><% } %>
+              </details>
+
+              <div class="partner-sources">
+                <span>Источники:</span>
+                <% partner.sources.forEach((source) => { %>
+                  <a href="<%= source.href %>" target="_blank" rel="noopener noreferrer"><%= source.label %> ↗</a>
+                <% }) %>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <section class="partners-offer">
+    <div class="container offer-panel">
+      <div class="offer-intro">
+        <span class="eyebrow">Рабочее предложение</span>
+        <h2>Бесплатный пилот.<br>Одна задача. 30 дней.</h2>
+        <p>Не продавать «сервис вообще». Выбрать вместе одну повторяющуюся проблему и заранее договориться, какой результат считаем полезным.</p>
+      </div>
+      <div class="offer-options">
+        <article><b>01</b><div><h3>Оповещения</h3><p>Сколько уведомлений об обработках дошло вовремя и было подтверждено пасеками.</p></div></article>
+        <article><b>02</b><div><h3>Учёт и маркировка</h3><p>Сколько часов пасечник сэкономил на учёте ульев, работ и документов.</p></div></article>
+        <article><b>03</b><div><h3>Продажи</h3><p>Сколько новых обращений и повторных заказов пришло через понятную витрину.</p></div></article>
+      </div>
+      <blockquote>«Мы из Октябрьского запускаем сервис для пасек. Ищем 3–5 хозяйств для бесплатного пилота на 30 дней. Ничего покупать не нужно: выбираем одну реальную проблему, настраиваем решение и вместе смотрим результат. Можно провести короткую встречу с несколькими активными пчеловодами?»</blockquote>
+    </div>
+  </section>
+
+  <section class="section partners-timeline" id="seven-days">
+    <div class="container">
+      <div class="partners-section-heading partners-heading-row">
+        <div><span class="eyebrow">Без долгой подготовки</span><h2>Первые 7 дней</h2></div>
+        <p>Цель недели — не продажи, а три согласия на пилот и одна измеримая проблема.</p>
+      </div>
+      <ol class="timeline-list">
+        <li><span>День 1</span><div><h3>«Дом мёда» в Октябрьском</h3><p>Зайти лично, проверить формулировку и попросить два тёплых знакомства.</p></div></li>
+        <li><span>День 2</span><div><h3>Туймазы и Бавлы</h3><p>Позвонить в два районных управления и предложить групповую демонстрацию.</p></div></li>
+        <li><span>День 3</span><div><h3>Организаторы «Бал туе»</h3><p>Запросить знакомство с участниками фестиваля, готовыми к прямым продажам.</p></div></li>
+        <li><span>Дни 4–5</span><div><h3>Пять коротких интервью</h3><p>Найти одну операцию, которая повторяется, отнимает время или теряет деньги.</p></div></li>
+        <li><span>Дни 6–7</span><div><h3>Один прототип</h3><p>Зафиксировать исходную метрику, получить три согласия и назначить сверку через 30 дней.</p></div></li>
+      </ol>
+      <div class="partners-note">
+        <b>Граница данных</b>
+        <p>На странице собраны только публичные деловые сигналы и контакты организаций. Перед поездкой проверьте график и актуальность телефона. Частные адреса и непубличные номера не запрашиваются и не распространяются.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

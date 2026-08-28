@@ -7,6 +7,7 @@ import helmet from 'helmet';
 import type { DatabaseSync } from 'node:sqlite';
 import { createSession, destroySession, getCurrentUser, hashPassword, randomToken, verifyPassword, type CurrentUser } from './auth.js';
 import { openDatabase } from './db.js';
+import { futurePartners, partnerPatterns } from './future-partners.js';
 import { asFloat, asInt, asText, cities, cityMap, distanceBetween, money, number, safeNext, slugify } from './utils.js';
 
 type CatalogItem = Record<string, unknown> & {
@@ -225,6 +226,14 @@ export function createApp(db: DatabaseSync = openDatabase(databasePath)) {
         (SELECT COUNT(*) FROM lots WHERE available = 1) AS lots
     `).get();
     response.render('home', { title: 'Мёдограм — мёд напрямую от пасек', featured, stats });
+  });
+
+  app.get('/future_partners', (_request, response) => {
+    response.render('future-partners', {
+      title: 'Будущие партнёры рядом с Октябрьским — Мёдограм',
+      partners: futurePartners,
+      patterns: partnerPatterns,
+    });
   });
 
   app.get('/catalog', (request, response) => {
