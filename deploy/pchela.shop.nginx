@@ -1,6 +1,4 @@
 server {
-    listen 80;
-    listen [::]:80;
     server_name pchela.shop www.pchela.shop;
 
     client_max_body_size 1m;
@@ -23,4 +21,18 @@ server {
 
     access_log /var/log/nginx/pchela.shop.access.log;
     error_log /var/log/nginx/pchela.shop.error.log;
+
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    ssl_certificate /etc/letsencrypt/live/pchela.shop/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pchela.shop/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name pchela.shop www.pchela.shop;
+    return 301 https://$host$request_uri;
 }
